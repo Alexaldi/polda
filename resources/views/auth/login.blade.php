@@ -3,7 +3,7 @@
 
 <head>
      	<!--Title-->
-	<title>Jiade : Crypto Trading UI Admin  Bootstrap 5 Template | Dexignlabs</title>
+	<title>Arsip Propam | Login</title>
 
 	<!-- Meta -->
 	<meta charset="utf-8">
@@ -11,28 +11,23 @@
 	<meta name="author" content="Dexignlabs">
 	<meta name="robots" content="index, follow">
 
-	<meta name="keywords" content="Admin Dashboard, Bootstrap Template, FrontEnd, Web Application, Responsive Design, User Experience, Customizable, Modern UI, Dashboard Template, Admin Panel, Bootstrap 5, HTML5, CSS3, JavaScript, Admin Template, UI Kit, SASS, SCSS, Analytics, Responsive Dashboard, responsive admin dashboard, ui kit, web app, Admin Dashboard, Template, Admin, Authentication, FrontEnd Integration, Web Application UI, Bootstrap Framework, User Interface Kit, SASS Integration, Customizable Template, HTML5/CSS3, Analytics Dashboard, Admin Dashboard UI, Mobile-Friendly Design, UI Components, Dashboard Widgets, Dashboard Framework, Data Visualization, User Experience (UX), Dashboard Widgets, Real-time Analytics, Cross-Browser Compatibility, Interactive Charts, Performance Optimization, Multi-Purpose Template, Efficient Admin Tools, Modern Web Technologies, Responsive Tables, Dashboard Widgets, Invoice Management, Access Control, Modular Design, Trend Analysis, User-Friendly Interface, Crypto Trading UI, Cryptocurrency Dashboard, Trading Platform Interface, Responsive Crypto Admin, Financial Dashboard, UI Components for Crypto, Cryptocurrency Exchange, Blockchain , Crypto Portfolio Template, Crypto Market Analytics">
+	<meta name="keywords" content="POLDA JAWA BARAT, Arsip Propam">
 
-	<meta name="description" content="Empower your cryptocurrency trading platform with Jiade, the ultimate Crypto Trading UI Admin Bootstrap 5 Template. Seamlessly combining sleek design with the power of Bootstrap 5, Jiade offers a sophisticated and user-friendly interface for managing your crypto assets. Packed with customizable components, responsive charts, and a modern dashboard, Jiade accelerates your development process. Crafted for efficiency and aesthetics, this template is your key to creating a cutting-edge crypto trading experience. Explore Jiade today and elevate your crypto trading platform to new heights with a UI that blends functionality and style effortlessly.">
+	<meta name="description" content="POLDA JAWA BARAT - SELAMAT DATANG DI APLIKASI ARSIP BERKAS PROPAM">
 
-	<meta property="og:title" content="Jiade : Crypto Trading UI Admin  Bootstrap 5 Template | Dexignlabs">
-	<meta property="og:description" content="Empower your cryptocurrency trading platform with Jiade, the ultimate Crypto Trading UI Admin Bootstrap 5 Template. Seamlessly combining sleek design with the power of Bootstrap 5, Jiade offers a sophisticated and user-friendly interface for managing your crypto assets. Packed with customizable components, responsive charts, and a modern dashboard, Jiade accelerates your development process. Crafted for efficiency and aesthetics, this template is your key to creating a cutting-edge crypto trading experience. Explore Jiade today and elevate your crypto trading platform to new heights with a UI that blends functionality and style effortlessly.">
+	<meta property="og:title" content="Arsip Propam | Login">
+	<meta property="og:description" content="POLDA JAWA BARAT - SELAMAT DATANG DI APLIKASI ARSIP BERKAS PROPAM">
 	
-	<meta property="og:image" content="https://jiade.dexignlab.com/xhtml/social-image.png">
-
 	<meta name="format-detection" content="telephone=no">
 
-	<meta name="twitter:title" content="Jiade : Crypto Trading UI Admin  Bootstrap 5 Template | Dexignlabs">
-	<meta name="twitter:description" content="Empower your cryptocurrency trading platform with Jiade, the ultimate Crypto Trading UI Admin Bootstrap 5 Template. Seamlessly combining sleek design with the power of Bootstrap 5, Jiade offers a sophisticated and user-friendly interface for managing your crypto assets. Packed with customizable components, responsive charts, and a modern dashboard, Jiade accelerates your development process. Crafted for efficiency and aesthetics, this template is your key to creating a cutting-edge crypto trading experience. Explore Jiade today and elevate your crypto trading platform to new heights with a UI that blends functionality and style effortlessly.">
+	<meta name="twitter:title" content="Arsip Propam | Login">
+	<meta name="twitter:description" content="POLDA JAWA BARAT - SELAMAT DATANG DI APLIKASI ARSIP BERKAS PROPAM">
 	
-	<meta name="twitter:image" content="https://jiade.dexignlab.com/xhtml/social-image.png">
-	<meta name="twitter:card" content="summary_large_image">
-
 	<!-- MOBILE SPECIFIC -->
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	
 	<!-- FAVICONS ICON -->
-	<link rel="shortcut icon" type="image/png" href="images/favicon.png">
+	<link rel="shortcut icon" type="image/png" href="{{ asset('dashboard/images/propam.ico') }}">
     <link href="{{ asset('dashboard/vendor/bootstrap-select/dist/css/bootstrap-select.min.css') }}" rel="stylesheet"/>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0">
     <link href="{{ asset('dashboard/css/style.css') }}" rel="stylesheet"/>
@@ -43,16 +38,11 @@
 		<div class="login-aside text-center  d-flex flex-column flex-row-auto">
 			<div class="d-flex flex-column-auto flex-column pt-lg-40 pt-15">
 				<div class="text-center mb-lg-4 mb-2 pt-5 logo">
-					<img src="{{ asset('dashboard/images/logo-white.png') }}" alt="">
+					<img src="{{ asset('dashboard/images/propam-bg.png') }}" alt="" style="width: 100px;">
+					<img src="{{ asset('dashboard/images/poldajabar-bg.png') }}" alt="" style="width: 100px;">
 				</div>
-				<h3 class="mb-2 text-white">Welcome back!</h3>
-				<p class="mb-4">User Experience & Interface Design <br>Strategy SaaS Solutions</p>
-			</div>
-			<div class="aside-image position-relative" style="background-image:url({{ asset('dashboard/images/background/pic-2.png') }});">
-				<img class="img1 move-1" src="{{ asset('dashboard/images/background/pic3.png') }}" alt="">
-				<img class="img2 move-2" src="{{ asset('dashboard/images/background/pic4.png') }}" alt="">
-				<img class="img3 move-3" src="{{ asset('dashboard/images/background/pic5.png') }}" alt="">
-				
+				<h2 class="mb-2 text-white">POLDA JAWA BARAT</h2>
+				<h4 class="mb-4 text-white">SELAMAT DATANG DI APLIKASI <br>ARSIP BERKAS PROPAM</h4>
 			</div>
 		</div>
 		<div class="container flex-row-fluid d-flex flex-column justify-content-center position-relative overflow-hidden p-7 mx-auto">
