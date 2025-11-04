@@ -17,36 +17,37 @@
                             <span class="text-muted">{{ $roleNames->implode(', ') ?: 'Pengguna' }}</span>
                         </div>
                     </div>
-                    <div class="info-list">
-                        <ul class="list-unstyled mb-0">
-                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-dark">
-                                <span class="text-muted">Email</span>
-                                <span class="text-white">{{ $user->email }}</span>
-                            </li>
-                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-dark">
-                                <span class="text-muted">Username</span>
-                                <span class="text-white">{{ $user->username ?? '-' }}</span>
-                            </li>
-                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-dark">
-                                <span class="text-muted">Role</span>
-                                <span class="text-white">{{ $roleNames->implode(', ') ?: '-' }}</span>
-                            </li>
-                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-dark">
-                                <span class="text-muted">Instansi</span>
-                                <span class="text-white">{{ optional($user->institution)->name ?? '-' }}</span>
-                            </li>
-                            <li class="d-flex justify-content-between align-items-center py-2">
-                                <span class="text-muted">Divisi</span>
-                                <span class="text-white">{{ optional($user->division)->name ?? '-' }}</span>
-                            </li>
-                        </ul>
+                    <ul class="list-unstyled mb-0">
+                        <li class="d-flex justify-content-between align-items-center py-3 border-top border-dark">
+                            <span class="text-muted">Email</span>
+                            <span class="text-white">{{ $user->email }}</span>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center py-3 border-top border-dark">
+                            <span class="text-muted">Username</span>
+                            <span class="text-white">{{ $user->username ?? '-' }}</span>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center py-3 border-top border-dark">
+                            <span class="text-muted">Role</span>
+                            <span class="text-white">{{ $roleNames->implode(', ') ?: '-' }}</span>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center py-3 border-top border-dark">
+                            <span class="text-muted">Instansi</span>
+                            <span class="text-white">{{ optional($user->institution)->name ?? '-' }}</span>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center py-3 border-top border-dark">
+                            <span class="text-muted">Divisi</span>
+                            <span class="text-white">{{ optional($user->division)->name ?? '-' }}</span>
+                        </li>
+                    </ul>
+                    <div class="mt-4">
+                        <a href="{{ route('profile.edit') }}" class="btn btn-primary w-100">Edit Profil</a>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-xl-8 col-lg-7">
             <div class="card profile-card card-bx m-b30">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="card-header border-0 pb-0 d-flex flex-wrap align-items-center justify-content-between gap-2">
                     <div>
                         <h4 class="card-title mb-1 text-white">Detail Profil</h4>
                         <span class="text-muted">Informasi akun Anda saat ini</span>
@@ -55,8 +56,8 @@
                         <i class="fa fa-edit me-2"></i>Ubah Profil
                     </a>
                 </div>
-                <div class="card-body">
-                    <div class="row g-4">
+                <div class="card-body p-4">
+                    <div class="row gy-4 gx-3">
                         <div class="col-md-6">
                             <small class="text-muted d-block">Nama Lengkap</small>
                             <h5 class="text-white mb-0">{{ $user->name }}</h5>
@@ -85,10 +86,10 @@
                 </div>
             </div>
             <div class="card card-bx">
-                <div class="card-header">
+                <div class="card-header border-0 pb-0">
                     <h4 class="card-title text-white mb-0">Catatan Aktivitas</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <p class="text-muted mb-0">Gunakan tombol "Edit Profil" untuk memperbarui informasi pribadi dan ubah password melalui menu yang tersedia.</p>
                 </div>
             </div>

@@ -17,27 +17,25 @@
                             <span class="text-muted">{{ $roleNames->implode(', ') ?: 'Pengguna' }}</span>
                         </div>
                     </div>
-                    <div class="info-list">
-                        <ul class="list-unstyled mb-0">
-                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-dark">
-                                <span class="text-muted">Email</span>
-                                <span class="text-white">{{ $user->email }}</span>
-                            </li>
-                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-dark">
-                                <span class="text-muted">Instansi</span>
-                                <span class="text-white">{{ optional($user->institution)->name ?? '-' }}</span>
-                            </li>
-                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-dark">
-                                <span class="text-muted">Divisi</span>
-                                <span class="text-white">{{ optional($user->division)->name ?? '-' }}</span>
-                            </li>
-                            <li class="d-flex justify-content-between align-items-center py-2">
-                                <span class="text-muted">Username</span>
-                                <span class="text-white">{{ $user->username ?? '-' }}</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="mt-4 text-center">
+                    <ul class="list-unstyled mb-0">
+                        <li class="d-flex justify-content-between align-items-center py-3 border-top border-dark">
+                            <span class="text-muted">Email</span>
+                            <span class="text-white">{{ $user->email }}</span>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center py-3 border-top border-dark">
+                            <span class="text-muted">Instansi</span>
+                            <span class="text-white">{{ optional($user->institution)->name ?? '-' }}</span>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center py-3 border-top border-dark">
+                            <span class="text-muted">Divisi</span>
+                            <span class="text-white">{{ optional($user->division)->name ?? '-' }}</span>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center py-3 border-top border-dark">
+                            <span class="text-muted">Username</span>
+                            <span class="text-white">{{ $user->username ?? '-' }}</span>
+                        </li>
+                    </ul>
+                    <div class="mt-4">
                         <a href="{{ route('profile.show') }}" class="btn btn-outline-primary w-100">
                             <i class="fa fa-arrow-left me-2"></i>Kembali ke Detail
                         </a>
@@ -47,39 +45,37 @@
         </div>
         <div class="col-xl-8 col-lg-7">
             <div class="card profile-card card-bx m-b30">
-                <div class="card-header">
-                    <div>
-                        <h4 class="card-title text-white mb-0">Pengaturan Profil</h4>
-                        <span class="text-muted">Perbarui informasi utama akun Anda</span>
-                    </div>
+                <div class="card-header border-0 pb-0">
+                    <h4 class="card-title text-white mb-1">Pengaturan Profil</h4>
+                    <span class="text-muted">Perbarui informasi utama akun Anda</span>
                 </div>
-                <div class="card-body">
-                    <form class="profile-form" method="POST" action="{{ route('profile.update') }}">
-                        @csrf
-                        @method('PUT')
-                        <div class="row g-4">
-                            <div class="col-sm-6">
+                <form class="profile-form" method="POST" action="{{ route('profile.update') }}">
+                    @csrf
+                    @method('PUT')
+                    <div class="card-body p-4">
+                        <div class="row gy-4 gx-3">
+                            <div class="col-md-6">
                                 <label class="form-label text-white">Nama Lengkap</label>
                                 <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
                                 @error('name')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
-                            <div class="col-sm-6">
+                            <div class="col-md-6">
                                 <label class="form-label text-white">Username</label>
                                 <input type="text" name="username" class="form-control" value="{{ old('username', $user->username) }}" required>
                                 @error('username')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
-                            <div class="col-sm-6">
+                            <div class="col-md-6">
                                 <label class="form-label text-white">Email</label>
                                 <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
                                 @error('email')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
-                            <div class="col-sm-6">
+                            <div class="col-md-6">
                                 <label class="form-label text-white">Instansi</label>
                                 <select name="institution_id" class="default-select form-control select2" required>
                                     <option value="" disabled {{ old('institution_id', $user->institution_id) ? '' : 'selected' }}>-- Pilih Instansi --</option>
@@ -93,7 +89,7 @@
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
-                            <div class="col-sm-6">
+                            <div class="col-md-6">
                                 <label class="form-label text-white">Divisi</label>
                                 <select name="division_id" class="default-select form-control select2" required>
                                     <option value="" disabled {{ old('division_id', $user->division_id) ? '' : 'selected' }}>-- Pilih Divisi --</option>
@@ -108,49 +104,47 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="card-footer border-0 px-0 mt-4 d-flex flex-wrap gap-3">
-                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                            <a href="{{ route('profile.show') }}" class="btn btn-outline-light">Batal</a>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="card-footer border-0 pt-0 px-4 pb-4 d-flex flex-wrap gap-3 justify-content-between">
+                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                        <a href="{{ route('profile.show') }}" class="btn btn-outline-light">Batal</a>
+                    </div>
+                </form>
             </div>
             <div class="card card-bx">
-                <div class="card-header">
-                    <div>
-                        <h4 class="card-title text-white mb-0">Ubah Password</h4>
-                        <span class="text-muted">Pastikan password baru kuat dan unik</span>
-                    </div>
+                <div class="card-header border-0 pb-0">
+                    <h4 class="card-title text-white mb-1">Ubah Password</h4>
+                    <span class="text-muted">Pastikan password baru kuat dan unik</span>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ route('profile.password.update') }}">
-                        @csrf
-                        @method('PUT')
-                        <div class="row g-4">
-                            <div class="col-sm-6">
+                <form method="POST" action="{{ route('profile.password.update') }}">
+                    @csrf
+                    @method('PUT')
+                    <div class="card-body p-4">
+                        <div class="row gy-4 gx-3">
+                            <div class="col-md-6">
                                 <label class="form-label text-white">Password Saat Ini</label>
                                 <input type="password" name="current_password" class="form-control" required>
                                 @error('current_password')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
-                            <div class="col-sm-6">
+                            <div class="col-md-6">
                                 <label class="form-label text-white">Password Baru</label>
                                 <input type="password" name="password" class="form-control" required minlength="6">
                                 @error('password')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
-                            <div class="col-sm-6">
+                            <div class="col-md-12">
                                 <label class="form-label text-white">Konfirmasi Password Baru</label>
                                 <input type="password" name="password_confirmation" class="form-control" required>
                             </div>
                         </div>
-                        <div class="card-footer border-0 px-0 mt-4">
-                            <button type="submit" class="btn btn-warning">Perbarui Password</button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="card-footer border-0 pt-0 px-4 pb-4">
+                        <button type="submit" class="btn btn-warning">Perbarui Password</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
