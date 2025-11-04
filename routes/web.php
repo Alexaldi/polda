@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,5 +28,9 @@ Route::middleware(['auth'])->group(
         Route::get('datatables/users', [UserController::class, 'datatables'])->name('datatables.users');
         // permission routes
         Route::resource('permissions', PermissionController::class);
+        // profile routes
+        Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
     }
 );

@@ -13,6 +13,8 @@ use App\Interfaces\RoleRepositoryInterface;
 use App\Interfaces\PermissionRepositoryInterface;
 use App\Interfaces\InstitutionRepositoryInterface;
 use App\Interfaces\DivisionRepositoryInterface;
+use App\Interfaces\ProfileRepositoryInterface;
+use App\Repositories\ProfileRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PermissionRepositoryInterface::class, PermissionRepository::class);
         $this->app->bind(InstitutionRepositoryInterface::class, InstitutionRepository::class);
         $this->app->bind(DivisionRepositoryInterface::class, DivisionRepository::class);
+        $this->app->bind(ProfileRepositoryInterface::class,ProfileRepository::class
+);
     }
 
     /**
