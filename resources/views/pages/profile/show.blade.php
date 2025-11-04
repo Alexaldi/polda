@@ -24,16 +24,20 @@
                                 <span class="text-white">{{ $user->email }}</span>
                             </li>
                             <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-dark">
+                                <span class="text-muted">Username</span>
+                                <span class="text-white">{{ $user->username ?? '-' }}</span>
+                            </li>
+                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-dark">
+                                <span class="text-muted">Role</span>
+                                <span class="text-white">{{ $roleNames->implode(', ') ?: '-' }}</span>
+                            </li>
+                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-dark">
                                 <span class="text-muted">Instansi</span>
                                 <span class="text-white">{{ optional($user->institution)->name ?? '-' }}</span>
                             </li>
-                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-dark">
+                            <li class="d-flex justify-content-between align-items-center py-2">
                                 <span class="text-muted">Divisi</span>
                                 <span class="text-white">{{ optional($user->division)->name ?? '-' }}</span>
-                            </li>
-                            <li class="d-flex justify-content-between align-items-center py-2">
-                                <span class="text-muted">Username</span>
-                                <span class="text-white">{{ $user->username ?? '-' }}</span>
                             </li>
                         </ul>
                     </div>

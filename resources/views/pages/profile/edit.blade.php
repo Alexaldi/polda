@@ -27,9 +27,13 @@
                                 <span class="text-muted">Instansi</span>
                                 <span class="text-white">{{ optional($user->institution)->name ?? '-' }}</span>
                             </li>
-                            <li class="d-flex justify-content-between align-items-center py-2">
+                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-dark">
                                 <span class="text-muted">Divisi</span>
                                 <span class="text-white">{{ optional($user->division)->name ?? '-' }}</span>
+                            </li>
+                            <li class="d-flex justify-content-between align-items-center py-2">
+                                <span class="text-muted">Username</span>
+                                <span class="text-white">{{ $user->username ?? '-' }}</span>
                             </li>
                         </ul>
                     </div>
@@ -44,54 +48,68 @@
         <div class="col-xl-8 col-lg-7">
             <div class="card profile-card card-bx m-b30">
                 <div class="card-header">
-                    <h4 class="card-title text-white mb-0">Pengaturan Profil</h4>
-                    <span class="text-muted">Perbarui informasi utama akun Anda</span>
+                    <div>
+                        <h4 class="card-title text-white mb-0">Pengaturan Profil</h4>
+                        <span class="text-muted">Perbarui informasi utama akun Anda</span>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <form id="profileUpdateForm" class="profile-form" method="POST" action="{{ route('profile.update') }}">
+                    <form class="profile-form" method="POST" action="{{ route('profile.update') }}">
                         @csrf
                         @method('PUT')
                         <div class="row g-4">
                             <div class="col-sm-6">
                                 <label class="form-label text-white">Nama Lengkap</label>
                                 <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
+                                @error('name')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label text-white">Username</label>
-                                <input type="text" name="username" class="form-control" value="{{ old('username', $user->username) }}" placeholder="Opsional">
+                                <input type="text" name="username" class="form-control" value="{{ old('username', $user->username) }}" required>
+                                @error('username')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label text-white">Email</label>
                                 <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
+                                @error('email')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label text-white">Instansi</label>
-                                <select name="institution_id" class="default-select form-control select2">
-                                    <option value="">-- Pilih Instansi --</option>
+                                <select name="institution_id" class="default-select form-control select2" required>
+                                    <option value="" disabled {{ old('institution_id', $user->institution_id) ? '' : 'selected' }}>-- Pilih Instansi --</option>
                                     @foreach($institutions as $inst)
                                         <option value="{{ $inst->id }}" @selected(old('institution_id', $user->institution_id) == $inst->id)>
                                             {{ $inst->name }}
                                         </option>
                                     @endforeach
                                 </select>
+                                @error('institution_id')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label text-white">Divisi</label>
-                                <select name="division_id" class="default-select form-control select2">
-                                    <option value="">-- Pilih Divisi --</option>
+                                <select name="division_id" class="default-select form-control select2" required>
+                                    <option value="" disabled {{ old('division_id', $user->division_id) ? '' : 'selected' }}>-- Pilih Divisi --</option>
                                     @foreach($divisions as $div)
                                         <option value="{{ $div->id }}" @selected(old('division_id', $user->division_id) == $div->id)>
                                             {{ $div->name }}
                                         </option>
                                     @endforeach
                                 </select>
+                                @error('division_id')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                         </div>
                         <div class="card-footer border-0 px-0 mt-4 d-flex flex-wrap gap-3">
-                            <button type="submit" class="btn btn-primary" data-loading="true">
-                                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-                                <span>Simpan Perubahan</span>
-                            </button>
+                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                             <a href="{{ route('profile.show') }}" class="btn btn-outline-light">Batal</a>
                         </div>
                     </form>
@@ -99,21 +117,29 @@
             </div>
             <div class="card card-bx">
                 <div class="card-header">
-                    <h4 class="card-title text-white mb-0">Ubah Password</h4>
-                    <span class="text-muted">Pastikan password baru kuat dan unik</span>
+                    <div>
+                        <h4 class="card-title text-white mb-0">Ubah Password</h4>
+                        <span class="text-muted">Pastikan password baru kuat dan unik</span>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <form id="passwordUpdateForm" method="POST" action="{{ route('profile.password.update') }}">
+                    <form method="POST" action="{{ route('profile.password.update') }}">
                         @csrf
                         @method('PUT')
                         <div class="row g-4">
                             <div class="col-sm-6">
                                 <label class="form-label text-white">Password Saat Ini</label>
                                 <input type="password" name="current_password" class="form-control" required>
+                                @error('current_password')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label text-white">Password Baru</label>
-                                <input type="password" name="password" class="form-control" required>
+                                <input type="password" name="password" class="form-control" required minlength="6">
+                                @error('password')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label text-white">Konfirmasi Password Baru</label>
@@ -121,10 +147,7 @@
                             </div>
                         </div>
                         <div class="card-footer border-0 px-0 mt-4">
-                            <button type="submit" class="btn btn-warning" data-loading="true">
-                                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-                                <span>Perbarui Password</span>
-                            </button>
+                            <button type="submit" class="btn btn-warning">Perbarui Password</button>
                         </div>
                     </form>
                 </div>
