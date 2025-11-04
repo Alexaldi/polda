@@ -14,11 +14,23 @@ class ProfileController extends Controller
         $this->middleware('auth');
     }
 
+    public function show()
+    {
+        $user = auth()->user()->load('institution', 'division', 'roles');
+
+        return view('pages.profile.show', [
+            'title' => 'Profile',
+            'user' => $user,
+        ]);
+    }
+
     public function edit()
     {
+        $user = auth()->user()->load('institution', 'division', 'roles');
+
         return view('pages.profile.edit', [
             'title' => 'Profile',
-            'user' => auth()->user(),
+            'user' => $user,
             'institutions' => $this->service->getInstitutions(),
             'divisions' => $this->service->getDivisions(),
         ]);
