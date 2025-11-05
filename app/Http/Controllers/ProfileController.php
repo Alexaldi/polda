@@ -63,10 +63,12 @@ class ProfileController extends Controller
         try {
             $this->service->updateProfile($user->id, $data, $request->file('photo'));
             DB::commit();
-            return back()->with('success', 'Profil berhasil diperbarui.');
+
+            return redirect()->route('profile.show')->with('success', 'Profil berhasil diperbarui.');
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
+
             return back()->withInput()->with('error', 'Terjadi kesalahan saat memperbarui profil.');
         }
     }
