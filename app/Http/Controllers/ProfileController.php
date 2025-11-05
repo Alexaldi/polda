@@ -42,33 +42,37 @@ class ProfileController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($user->id),
-            ],
-            'username' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('users', 'username')->ignore($user->id),
-            ],
-            'institution_id' => ['required', 'integer', 'exists:institutions,id'],
-            'division_id' => ['required', 'integer', 'exists:divisions,id'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'username' => ['nullable', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'institution_id' => ['nullable', 'integer', 'exists:institutions,id'],
+            'division_id' => ['nullable', 'integer', 'exists:divisions,id'],
+            'photo' => ['nullable', 'image', 'max:2048'],
         ]);
 
         DB::beginTransaction();
         try {
-            $this->service->updateProfile($user->id, $data);
+            $this->service->updateProfile($user->id, $data, $request->file('photo'));
             DB::commit();
-
-            return redirect()->route('profile.show')->with('success', 'Profil berhasil diperbarui.');
+            return back()->with('success', 'Profil berhasil diperbarui.');
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
-
             return back()->withInput()->with('error', 'Terjadi kesalahan saat memperbarui profil.');
+        }
+    }
+
+    public function deletePhoto(Request $request)
+    {
+        $user = $request->user();
+        DB::beginTransaction();
+        try {
+            $this->service->deletePhoto($user->id);
+            DB::commit();
+            return back()->with('success', 'Foto profil berhasil dihapus.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+            return back()->with('error', 'Gagal menghapus foto profil.');
         }
     }
 

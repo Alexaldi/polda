@@ -7,6 +7,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -24,8 +25,22 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'photo',
     ];
-
+    
+    /**
+     * Get the URL of the user's photo.
+     *
+     * @return string
+     */
+    public function getPhotoUrlAttribute(): string
+    {
+        if ($this->photo) {
+            return Storage::disk('public')->url($this->photo);
+        }
+        return asset('dashboard/images/user.jpg'); // fallback default
+    }
+    
     /**
      * The attributes that should be hidden for serialization.
      *

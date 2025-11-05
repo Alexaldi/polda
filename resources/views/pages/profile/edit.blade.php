@@ -51,11 +51,35 @@
                         <h4 class="card-title text-white mb-1">Pengaturan Profil</h4>
                         <span class="text-muted">Perbarui informasi utama akun Anda</span>
                     </div>
-                    <form id="profileUpdateForm" method="POST" action="{{ route('profile.update') }}">
+                    <form id="profileUpdateForm" method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         <div class="card-body p-4">
                             <div class="row gy-4 gx-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-white">Foto Profil</label>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <input type="file" name="photo" class="form-control" accept="image/*">
+                                        @if ($user->photo)
+                                            <button type="button" class="btn btn-outline-danger btn-sm"
+                                                    onclick="event.preventDefault(); document.getElementById('delete-photo-form').submit();">
+                                                Hapus
+                                            </button>
+                                        @endif
+                                    </div>
+                                    <small class="text-muted">Maks 2MB, format JPG/PNG/WebP.</small>
+                                    @error('photo')
+                                        <small class="text-danger d-block">{{ $message }}</small>
+                                    @enderror
+                                </div>
+s
+                                @if ($user->photo)
+                                <form id="delete-photo-form" method="POST" action="{{ route('profile.photo.delete') }}" style="display: none;">
+                                    @csrf
+                                    @method('DELETE')
+                                </form>
+                                @endif
+                             
                                 <div class="col-md-6">
                                     <label class="form-label text-white">Nama Lengkap</label>
                                     <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>

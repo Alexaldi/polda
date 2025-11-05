@@ -58,7 +58,7 @@
                                     <span class="d-block text-end">{{ auth()->user()->email }}</span>
                                 </div>
                             </div>
-                            <img src="{{ asset('dashboard/images/user.jpg') }}" alt="">
+                            <img src="{{ auth()->user()->photo_url }}" alt="Foto Profil" class="rounded-circle" width="45" height="45">
                         </div>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end">

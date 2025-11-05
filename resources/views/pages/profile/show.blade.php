@@ -10,7 +10,7 @@
                 <div class="card-body p-4">
                     <div class="author-profile text-center mb-4">
                         <div class="author-media mb-3">
-                            <img src="{{ asset('dashboard/images/user.jpg') }}" alt="Avatar" class="rounded-circle">
+                            <img src="{{ $user->photo_url }}" alt="Avatar" class="rounded-circle">
                         </div>
                         <div class="author-info">
                             <h4 class="title text-white mb-1">{{ $user->name }}</h4>
