@@ -158,3 +158,24 @@
     </div>
 </div>
 @endsection
+
+@section('scripts')
+<script>
+jQuery(function ($) {
+    function bindLoadingState(formSelector) {
+        var $form = $(formSelector);
+        if (!$form.length) return;
+
+        $form.on('submit', function () {
+            var $btn = $form.find('button[type="submit"][data-loading="true"]').first();
+            if (!$btn.length) return;
+            $btn.prop('disabled', true).addClass('disabled');
+            $btn.find('.spinner-border').removeClass('d-none');
+        });
+    }
+
+    bindLoadingState('#profileUpdateForm');
+    bindLoadingState('#passwordUpdateForm');
+});
+</script>
+@endsection
