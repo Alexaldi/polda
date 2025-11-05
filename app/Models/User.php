@@ -28,7 +28,20 @@ class User extends Authenticatable
         'password',
         'photo',
     ];
-
+    
+    /**
+     * Get the URL of the user's photo.
+     *
+     * @return string
+     */
+    public function getPhotoUrlAttribute(): string
+    {
+        if ($this->photo) {
+            return Storage::disk('public')->url($this->photo);
+        }
+        return asset('dashboard/images/user.jpg'); // fallback default
+    }
+    
     /**
      * The attributes that should be hidden for serialization.
      *

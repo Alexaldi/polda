@@ -73,6 +73,21 @@ class ProfileController extends Controller
         }
     }
 
+    public function deletePhoto(Request $request)
+    {
+        $user = $request->user();
+        DB::beginTransaction();
+        try {
+            $this->service->deletePhoto($user->id);
+            DB::commit();
+            return back()->with('success', 'Foto profil berhasil dihapus.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+            return back()->with('error', 'Gagal menghapus foto profil.');
+        }
+    }
+
     public function updatePassword(Request $request)
     {
         $data = $request->validate([
