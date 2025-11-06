@@ -16,7 +16,7 @@ class UserTableSeeder extends Seeder
         // dummy user by role
         // Admin
         $admin = User::updateOrCreate(
-            ['email' => 'user@mail.com'],
+            ['email' => 'user@example.com'],
             [
                 'name' => 'user',
                 'password' => bcrypt('123'),
