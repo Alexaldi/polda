@@ -5,11 +5,11 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-xl-4 col-lg-5">
-            <div class="card card-bx profile-card m-b30 theme-bg-card border theme-border">
+            <div class="card card-bx profile-card m-b30 theme-bg-card theme-border">
                 <div class="card-body p-4">
                     <div class="author-profile text-center mb-4">
                         <div class="author-media mb-3">
-                            <img src="{{ $user->photo_url ?? asset('dashboard/images/user.jpg') }}" alt="{{ $user->name ?? 'User' }}" class="rounded-circle img-fluid object-fit-cover">
+                            <img src="{{ $profilePhoto }}" alt="{{ $user->name ?? 'User' }}" class="rounded-circle img-fluid object-fit-cover">
                         </div>
                         <div class="author-info">
                             <h4 class="title mb-1 theme-text-main">{{ $user->name }}</h4>
@@ -43,7 +43,7 @@
             </div>
         </div>
         <div class="col-xl-8 col-lg-7">
-            <div class="card profile-card card-bx m-b30 theme-bg-card border theme-border">
+            <div class="card profile-card card-bx m-b30 theme-bg-card theme-border">
                 <div class="card-header border-0 pb-0">
                     <h4 class="card-title mb-1 theme-text-main">Pengaturan Profil</h4>
                     <span class="theme-text-secondary">Perbarui informasi utama akun Anda</span>
@@ -118,7 +118,7 @@
                     </div>
                 </form>
             </div>
-            <div class="card card-bx theme-bg-card border theme-border">
+            <div class="card card-bx theme-bg-card theme-border">
                 <div class="card-header border-0 pb-0">
                     <h4 class="card-title mb-1 theme-text-main">Ubah Password</h4>
                     <span class="theme-text-secondary">Pastikan password baru kuat dan unik</span>
