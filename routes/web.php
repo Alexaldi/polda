@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\PermissionController;
 
 /*
@@ -27,6 +28,9 @@ Route::middleware(['auth'])->group(
         // users routes
         Route::resource('users', UserController::class);
         Route::get('datatables/users', [UserController::class, 'datatables'])->name('datatables.users');
+
+        Route::resource('institutions', InstitutionController::class);
+        Route::get('institutions/datatables', [InstitutionController::class, 'datatables'])->name('institutions.datatables');
 
         // permission routes
         Route::get('datatables/permissions', [PermissionController::class, 'datatables'])->name('datatables.permissions');

@@ -19,4 +19,9 @@ class Division extends Model
         'name',
         'type',
     ];
+
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 }
