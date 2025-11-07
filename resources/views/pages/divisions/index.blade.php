@@ -13,48 +13,69 @@
                         <a href="javascript:void(0);" class="expand handle"><i class="fal fa-angle-down"></i></a>
                     </div>
                 </div>
-                <div class="cm-content-body">
-                    <div class="row p-3">
-                        <div class="col-xl-3 col-sm-6">
-                            <input type="text" class="form-control" id="filter_q" placeholder="Search by Division Name">
-                        </div>
-                        <div class="col-xl-3 col-sm-6">
-                            <button id="btnFilter" class="btn btn-primary">Filter</button>
-                            <button id="btnClear" class="btn btn-danger">Clear</button>
+
+                <div class="cm-content-body form excerpt">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-xl-3 col-sm-6">
+                                <label class="form-label">Search</label>
+                                <input type="text" class="form-control mb-xl-0 mb-3"
+                                       id="filter_q" placeholder="Search by Sub Bagian Name">
+                            </div>
+                            <div class="col-xl-3 col-sm-6 align-self-end">
+                                <div>
+                                    <button id="btnFilter" class="btn btn-primary me-2" type="button">
+                                        <i class="fa fa-filter me-1"></i>Filter
+                                    </button>
+                                    <button id="btnClear" class="btn btn-danger light" type="button">
+                                        Remove Filter
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
             </div>
 
             <!-- Tambah Divisi -->
             <div class="mb-3">
-                <a href="{{ route('divisions.create') }}" class="btn btn-primary btn-sm">Tambah Divisi</a>
+                <a href="{{ route('divisions.create') }}" class="btn btn-primary btn-sm">Tambah Sub Bagian</a>
             </div>
 
             <!-- DataTables -->
             <div class="filter cm-content-box box-primary">
                 <div class="content-title SlideToolHeader">
-                    <div class="cpa"><i class="fa-solid fa-file-lines me-1"></i>Divisi List</div>
+                    <div class="cpa"><i class="fa-solid fa-file-lines me-1"></i>Sub Bagian List</div>
                 </div>
-                <div class="cm-content-body">
-                    <div class="table-responsive p-3">
-                        <table id="divisions-table" class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Nama Divisi</th>
-                                    <th>Tipe</th>
-                                    <th>Parent Divisi</th>
-                                    <th>Created At</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+
+                <div class="cm-content-body form excerpt">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="divisions-table" class="display min-w850">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Nama Sub Bagian</th>
+                                        <th>Jenis</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Nama Sub Bagian</th>
+                                        <th>Jenis</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
 
+            </div>
         </div>
     </div>
 </div>
@@ -77,11 +98,16 @@ jQuery(function($) {
             { data: 'DT_RowIndex', name: 'DT_RowIndex' },
             { data: 'name', name: 'name' },
             { data: 'type', name: 'type' },
-            { data: 'parent_division', name: 'parent_division' },
-            { data: 'created_at', name: 'created_at' },
             { data: 'action', name: 'action', orderable: false, searchable: false },
         ],
-        order: [[4, 'desc']],
+        order: [[1, 'asc']],
+        
+        language: {
+                paginate: {
+                    previous: '<<',
+                    next: '>>'
+                }
+        }
     });
 
     $('#btnFilter').on('click', function() {

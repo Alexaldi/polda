@@ -32,25 +32,9 @@
                         <div class="form-group mb-3">
                             <label>Tipe Divisi</label>
                             <select name="type" class="form-control" required>
-                                <option value="">-- Pilih Tipe --</option>
+                                <option value="">-- Pilih Jenis --</option>
                                 <option value="polres" {{ (old('type', $division->type ?? '') == 'polres') ? 'selected' : '' }}>Polres</option>
-                                <option value="satuan" {{ (old('type', $division->type ?? '') == 'satuan') ? 'selected' : '' }}>Satuan</option>
-                                <option value="subbag" {{ (old('type', $division->type ?? '') == 'subbag') ? 'selected' : '' }}>Subbag</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label>Parent Divisi</label>
-                            <select name="parent_id" class="form-control">
-                                <option value="">-- Tidak ada --</option>
-                                @foreach($parentDivisions as $parent)
-                                    <option 
-                                        value="{{ $parent->id }}" 
-                                        {{ (old('parent_id', $division->parent_id ?? '') == $parent->id) ? 'selected' : '' }}
-                                    >
-                                        {{ $parent->name }}
-                                    </option>
-                                @endforeach
+                                <option value="polda" {{ (old('type', $division->type ?? '') == 'polda') ? 'selected' : '' }}>Polda</option>
                             </select>
                         </div>
 

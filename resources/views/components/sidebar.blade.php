@@ -65,7 +65,8 @@
                         <span class="nav-text">Bagian Management</span>
                     </a>
                     <ul aria-expanded="false">
-                        <li><a href="{{ route('divisions.index') }}">Divisi</a></li>
+                        <li><a href="{{ route('divisions.index') }}">Sub Bagian</a></li>
+                        <li><a href="#">Unit</a></li>
                     </ul>
                 </li>
             </ul>

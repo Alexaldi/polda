@@ -70,11 +70,11 @@ class DivisionController extends Controller
             foreach ($divisions as $key => $division) {
                 $parentName = $division->parent ? $division->parent->name : '-';
                 $htmlButton = '<td class="text-nowrap">
-                    <a href="' . route('divisions.edit', $division->id) . '" class="btn btn-warning btn-sm">
+                    <a href="' . route('divisions.edit', $division->id) . '" class="btn btn-warning btn-sm content-icon">
                         <i class="fa fa-edit"></i>
                     </a>
                     <a href="javascript:void(0);" 
-                        class="btn btn-danger btn-sm btn-delete"
+                        class="btn btn-danger btn-sm content-icon btn-delete"
                         data-id="' . $division->id . '"
                         data-name="' . htmlspecialchars($division->name, ENT_QUOTES) . '"
                         data-url="' . route('divisions.destroy', $division->id) . '"
@@ -87,8 +87,7 @@ class DivisionController extends Controller
                     'DT_RowIndex' => $key + 1 + $start,
                     'name' => $division->name,
                     'type' => $division->type,
-                    'parent_division' => $parentName,
-                    'created_at' => $division->created_at->format('Y-m-d'),
+                    'created_at' => $division->created_at ? $division->created_at->format('d-m-Y') : '-',
                     'action' => $htmlButton,
                 ];
             }
@@ -108,7 +107,6 @@ class DivisionController extends Controller
         return view('pages.divisions.create', [
             'title' => 'Tambah Divisi',
             'division' => null,
-            'parentDivisions' => $parentDivisions,
         ]);
     }
 
