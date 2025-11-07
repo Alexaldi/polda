@@ -18,4 +18,9 @@ class Institution extends Model
         'name',
         'type',
     ];
+
+    public function divisions()
+    {
+        return $this->hasMany(Division::class);
+    }
 }
