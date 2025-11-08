@@ -2,55 +2,45 @@
 
 namespace App\Repositories;
 
-use App\Interfaces\InstitutionRepositoryInterface;
 use App\Models\Institution;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
+use App\Interfaces\InstitutionRepositoryInterface;
 
 class InstitutionRepository implements InstitutionRepositoryInterface
 {
-    protected function query(): Builder
+    public function getAllForDatatable()
     {
-        return Institution::query();
+        return Institution::select(['id', 'name', 'type', 'created_at']);
     }
 
-    public function getAllOrderedByName(): Collection
+    public function getAllOrderedByName()
     {
-        return $this->query()->orderBy('name')->get();
+        return Institution::orderBy('name')->get();
     }
 
-    public function getAllForDatatable(): Builder
+    public function getDistinctTypes()
     {
-        return $this->query()->select('institutions.*');
+        return Institution::select('type')->distinct()->pluck('type');
     }
 
-    public function getDistinctTypes(): Collection
+    public function store(array $data)
     {
-        return $this->query()->select('type')->distinct()->pluck('type');
+        return Institution::create($data);
     }
 
-    public function findById($id): ?Institution
+    public function findById($id)
     {
-        return $this->query()->find($id);
+        return Institution::findOrFail($id);
     }
 
-    public function store(array $payload): Institution
+    public function update($id, array $data)
     {
-        return Institution::create($payload);
+        $institution = Institution::findOrFail($id);
+        return $institution->update($data);
     }
 
-    public function update($id, array $payload): ?Institution
+    public function delete($id)
     {
-        $institution = $this->findById($id);
-        if (!$institution) return null;
-
-        $institution->update($payload);
-        return $institution->refresh();
-    }
-
-    public function delete($id): bool
-    {
-        $institution = $this->findById($id);
-        return $institution ? (bool)$institution->delete() : false;
+        $institution = Institution::findOrFail($id);
+        return $institution->delete();
     }
 }

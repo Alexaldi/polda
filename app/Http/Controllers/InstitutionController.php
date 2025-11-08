@@ -2,100 +2,174 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\InstitutionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+use App\Repositories\InstitutionRepository;
+use App\Services\InstitutionService;
 
 class InstitutionController extends Controller
 {
-    protected $service;
+    protected $institutionRepository, $service, $user;
 
-    public function __construct(InstitutionService $service)
+    public function __construct(InstitutionRepository $institutionRepository, InstitutionService $service)
     {
-        $this->middleware('auth');
+        $this->institutionRepository = $institutionRepository;
         $this->service = $service;
+
+        $this->middleware('auth');
+        $this->middleware(function ($request, $next) {
+            $this->user = auth()->user();
+            return $next($request);
+        });
     }
 
     public function index()
     {
-        $types = $this->service->getTypes();
-        return view('pages.institutions.index', compact('types'));
+        return view('pages.institutions.index', [
+            'title' => 'Institusi',
+            'user' => $this->user,
+            'types' => $this->institutionRepository->getDistinctTypes(),
+        ]);
     }
 
     public function datatables(Request $request)
     {
-        $query = $this->service->getAllForDatatable();
-        $filterQ = $request->input('filter_q');
-        $filterType = $request->input('filter_type');
+        if ($request->ajax()) {
+            $columns = [
+                null,
+                'name',
+                'type',
+                'created_at',
+                null,
+            ];
 
-        if ($filterQ) {
-            $query->where('name', 'like', "%$filterQ%");
-        }
-        if ($filterType) {
-            $query->where('type', $filterType);
-        }
+            $limit = $request->input('length');
+            $start = $request->input('start');
+            $orderColIndex = $request->input('order.0.column');
+            $dir = $request->input('order.0.dir', 'asc');
+            $order = $columns[$orderColIndex] ?? 'created_at';
+            $filter_q = $request->input('filter_q');
+            $filter_type = $request->input('filter_type');
 
-        $data = $query->orderBy('created_at', 'desc')->get();
-        return response()->json(['data' => $data]);
+            $query = $this->institutionRepository->getAllForDatatable();
+
+            if (!empty($filter_q)) {
+                $query->where('name', 'like', "%{$filter_q}%");
+            }
+
+            if (!empty($filter_type)) {
+                $query->where('type', $filter_type);
+            }
+
+            $search = $request->input('search.value');
+            if (!empty($search)) {
+                $query->where('name', 'like', "%{$search}%");
+            }
+
+            $totalData = $query->count();
+
+            if ($order) {
+                $query->orderBy($order, $dir);
+            }
+
+            $institutions = $query->skip($start)->take($limit)->get();
+
+            $data = [];
+            foreach ($institutions as $key => $institution) {
+                $htmlButton = '<td class="text-nowrap">
+                    <a href="' . route('institutions.edit', $institution->id) . '" class="btn btn-warning btn-sm content-icon">
+                        <i class="fa fa-edit"></i>
+                    </a>
+                    <a href="javascript:void(0);" 
+                        class="btn btn-danger btn-sm content-icon btn-delete"
+                        data-id="' . $institution->id . '"
+                        data-name="' . htmlspecialchars($institution->name, ENT_QUOTES) . '"
+                        data-url="' . route('institutions.destroy', $institution->id) . '"
+                        data-title="Hapus Institusi?">
+                        <i class="fa fa-times"></i>
+                    </a>
+                </td>';
+
+                $data[] = [
+                    'DT_RowIndex' => $key + 1 + $start,
+                    'name' => $institution->name,
+                    'type' => $institution->type,
+                    'created_at' => $institution->created_at ? $institution->created_at->format('d-m-Y') : '-',
+                    'action' => $htmlButton,
+                ];
+            }
+
+            return response()->json([
+                'draw' => intval($request->input('draw')),
+                'recordsTotal' => $totalData,
+                'recordsFiltered' => $totalData,
+                'data' => $data,
+            ]);
+        }
     }
 
     public function create()
     {
-        $types = $this->service->getTypes();
-        return view('pages.institutions.create', compact('types'));
+        return view('pages.institutions.create', [
+            'title' => 'Tambah Institusi',
+            'institution' => null,
+            'types' => $this->institutionRepository->getDistinctTypes(),
+        ]);
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:institutions,name',
-            'type' => 'required|string|max:255'
+        $request->validate([
+            'name' => 'required|unique:institutions,name',
+            'type' => 'required',
         ]);
 
-        DB::beginTransaction();
-        try {
-            $result = $this->service->store($validated);
-            DB::commit();
+        $result = $this->service->store($request->all());
+
+        if ($result['status']) {
             return redirect()->route('institutions.index')->with('success', $result['message']);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return back()->with('error', $e->getMessage());
         }
+
+        return back()->with('error', $result['message'])->withInput();
     }
 
     public function edit($id)
     {
-        $institution = $this->service->getById($id);
-        $types = $this->service->getTypes();
-        return view('pages.institutions.create', compact('institution', 'types'));
+        $institution = $this->institutionRepository->findById($id);
+
+        return view('pages.institutions.create', [
+            'title' => 'Edit Institusi',
+            'institution' => $institution,
+            'types' => $this->institutionRepository->getDistinctTypes(),
+        ]);
     }
 
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', Rule::unique('institutions', 'name')->ignore($id)],
-            'type' => 'required|string|max:255'
+        $request->validate([
+            'name' => 'required|unique:institutions,name,' . $id,
+            'type' => 'required',
         ]);
 
-        DB::beginTransaction();
-        try {
-            $result = $this->service->update($id, $validated);
-            DB::commit();
+        $result = $this->service->update($id, $request->all());
+
+        if ($result['status']) {
             return redirect()->route('institutions.index')->with('success', $result['message']);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return back()->with('error', $e->getMessage());
         }
+
+        return back()->with('error', $result['message'])->withInput();
     }
 
     public function destroy($id)
     {
-        try {
-            $result = $this->service->delete($id);
-            return response()->json(['status' => true, 'message' => $result['message']]);
-        } catch (\Throwable $e) {
-            return response()->json(['status' => false, 'message' => $e->getMessage()]);
+        $result = $this->service->delete($id);
+
+        if (request()->ajax()) {
+            return response()->json([
+                'status' => $result,
+                'message' => $result ? 'Institusi berhasil dihapus' : 'Gagal menghapus institusi',
+            ]);
         }
+
+        return redirect()->route('institutions.index')->with('success', $result ? 'Institusi berhasil dihapus' : 'Gagal menghapus institusi');
     }
 }

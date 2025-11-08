@@ -3,50 +3,65 @@
 namespace App\Services;
 
 use App\Repositories\InstitutionRepository;
+use Illuminate\Support\Facades\DB;
 
 class InstitutionService
 {
-    public function __construct(protected InstitutionRepository $repo) {}
+    protected $institutionRepository;
 
-    public function getAllForDatatable()
+    public function __construct(InstitutionRepository $institutionRepository)
     {
-        return $this->repo->getAllForDatatable();
-    }
-
-    public function getTypes()
-    {
-        return $this->repo->getDistinctTypes();
-    }
-
-    public function getById($id)
-    {
-        return $this->repo->findById($id);
+        $this->institutionRepository = $institutionRepository;
     }
 
     public function store(array $data)
     {
-        $institution = $this->repo->store($data);
-        return [
-            'status' => (bool) $institution,
-            'message' => $institution ? 'Institusi berhasil ditambahkan' : 'Gagal menambah institusi'
-        ];
+        DB::beginTransaction();
+        try {
+            $this->institutionRepository->store($data);
+            DB::commit();
+            return ['status' => true, 'message' => 'Institusi berhasil dibuat.'];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return ['status' => false, 'message' => 'Gagal membuat institusi: ' . $e->getMessage()];
+        }
     }
 
     public function update($id, array $data)
     {
-        $institution = $this->repo->update($id, $data);
-        return [
-            'status' => (bool) $institution,
-            'message' => $institution ? 'Institusi berhasil diperbarui' : 'Gagal memperbarui institusi'
-        ];
+        DB::beginTransaction();
+        try {
+            $this->institutionRepository->update($id, $data);
+            DB::commit();
+            return ['status' => true, 'message' => 'Institusi berhasil diperbarui.'];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return ['status' => false, 'message' => 'Gagal memperbarui institusi: ' . $e->getMessage()];
+        }
     }
 
     public function delete($id)
     {
-        $deleted = $this->repo->delete($id);
-        return [
-            'status' => (bool) $deleted,
-            'message' => $deleted ? 'Institusi berhasil dihapus' : 'Institusi tidak ditemukan'
-        ];
+        try {
+            $this->institutionRepository->delete($id);
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    public function getAllForDatatable()
+    {
+        return $this->institutionRepository->getAllForDatatable();
+    }
+
+    public function getTypes()
+    {
+        return $this->institutionRepository->getDistinctTypes();
+    }
+
+    public function getById($id)
+    {
+        return $this->institutionRepository->findById($id);
     }
 }
