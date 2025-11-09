@@ -5,7 +5,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubDivisionController;
 use App\Http\Controllers\DivisionController;
 
 /*
@@ -32,6 +36,24 @@ Route::middleware(['auth'])->group(
         // permission routes
         Route::get('datatables/permissions', [PermissionController::class, 'datatables'])->name('datatables.permissions');
         Route::resource('permissions', PermissionController::class);
+        // profile routes
+        Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
+        Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+        Route::delete('profile/photo', [ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
+        Route::get('profile/photo/{path}', [ProfileController::class, 'photo'])
+            ->where('path', '.*')
+            ->name('profile.photo.show');
+
+        //intitution routes
+        Route::get('institutions/datatables', [InstitutionController::class, 'datatables'])->name('institutions.datatables');
+        Route::resource('institutions',InstitutionController::class);
+        
+        //division and sub duvision routes
+        Route::get('subdivisions/datatables', [SubDivisionController::class, 'datatables'])
+            ->name('subdivisions.datatables');
+        Route::resource('subdivisions', SubDivisionController::class)->except('show');
 
         // role routes
         Route::resource('roles', RoleController::class);

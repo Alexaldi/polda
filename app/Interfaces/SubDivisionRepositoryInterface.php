@@ -2,7 +2,7 @@
 
 namespace App\Interfaces;
 
-interface DivisionRepositoryInterface
+interface SubDivisionRepositoryInterface
 {
     /**
      * Return all divisions ordered by name.

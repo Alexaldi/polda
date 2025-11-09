@@ -55,6 +55,9 @@
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('users.index') }}">User</a></li>
+                        <li><a href="{{ route('institutions.index')}}">Institusi</a></li>
+                        <li><a href="{{ route('subdivisions.index')}}">Subdivisi</a></li>
+                        <li><a href="#">Role</a></li>
                         <li><a href="{{ route('roles.index') }}">Role</a></li>
                         <li><a href="{{ route('permissions.index') }}">Permission</a></li>
                     </ul>
