@@ -3,12 +3,14 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubDivisionController;
+use App\Http\Controllers\DivisionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,10 +28,13 @@ Route::middleware(['auth'])->group(
     function () {
         // dashboard routes
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
+
         // users routes
         Route::resource('users', UserController::class);
         Route::get('datatables/users', [UserController::class, 'datatables'])->name('datatables.users');
+
         // permission routes
+        Route::get('datatables/permissions', [PermissionController::class, 'datatables'])->name('datatables.permissions');
         Route::resource('permissions', PermissionController::class);
         // profile routes
         Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
@@ -49,5 +54,13 @@ Route::middleware(['auth'])->group(
         Route::get('subdivisions/datatables', [SubDivisionController::class, 'datatables'])
             ->name('subdivisions.datatables');
         Route::resource('subdivisions', SubDivisionController::class)->except('show');
+
+        // role routes
+        Route::resource('roles', RoleController::class);
+        Route::get('datatables/roles', [RoleController::class, 'datatables'])->name('datatables.roles');
+
+        // divisi routes
+        Route::resource('divisions', DivisionController::class);
+        Route::get('datatables/division', [DivisionController::class, 'datatables'])->name('datatables.division');
     }
 );

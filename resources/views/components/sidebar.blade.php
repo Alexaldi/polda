@@ -48,7 +48,8 @@
                         <span class="nav-text">Dashboard</span>
                     </a>
                 </li>
-                <li><a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
                         <i class="material-symbols-outlined">lab_profile</i>
                         <span class="nav-text">User Management</span>
                     </a>
@@ -57,6 +58,18 @@
                         <li><a href="{{ route('institutions.index')}}">Institusi</a></li>
                         <li><a href="{{ route('subdivisions.index')}}">Subdivisi</a></li>
                         <li><a href="#">Role</a></li>
+                        <li><a href="{{ route('roles.index') }}">Role</a></li>
+                        <li><a href="{{ route('permissions.index') }}">Permission</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                        <i class="material-symbols-outlined">lab_profile</i>
+                        <span class="nav-text">Bagian Management</span>
+                    </a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('divisions.index') }}">Sub Bagian</a></li>
+                        <li><a href="#">Unit</a></li>
                     </ul>
                 </li>
             </ul>

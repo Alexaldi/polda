@@ -29,4 +29,10 @@ class Division extends Model
     {
         return $this->hasMany(Division::class, 'parent_id');
     }
+  
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
+
 }
