@@ -1,6 +1,6 @@
 # Sequence Diagram: Fitur Pelaporan
 
-Berdasar dokumen specify di `docs/speckit/pelaporan/specify.md`, berikut sequence diagram mermaid untuk alur penyimpanan data laporan, tersangka, journey, dan evidence.
+Berdasar dokumen specify di `docs/speckit/pelaporan/specify.md`, berikut sequence diagram mermaid untuk alur penyimpanan data laporan, tersangka dan journey.
 
 ```mermaid
 sequenceDiagram
@@ -19,9 +19,9 @@ sequenceDiagram
 
     User->>Web: Isi data Report, Suspects, Journey, Evidence
     User->>Web: Klik Submit
-    Web->>RC: POST /reports (payload: report + suspects[] + journey + evidence[])
+    Web->>RC: POST /reports (payload: report + suspects[] + journey)
 
-    RC->>RC: Validasi input (Report, Suspects, Journey, Evidence)
+    RC->>RC: Validasi input (Report, Suspects, Journey)
     alt Validasi gagal
         RC-->>Web: Redirect back + errors (validation)
         Web-->>User: Tampilkan pesan error (SweetAlert/alert)
@@ -47,7 +47,7 @@ sequenceDiagram
 ```
 
 Catatan:
-- Diagram ini menggunakan pendekatan langsung Controller → Model (Eloquent) → Database.
-- Jika nantinya ada Service/Repository layer untuk Report, posisinya dapat disisipkan di antara Controller dan Model tanpa mengubah alur utama.
-- Tampilkan feedback sukses/gagal menggunakan SweetAlert sesuai integrasi global yang sudah ada.
+- Data Tersangka Bisa Lebih Dari Satu
+- Data Tipe Journey ketika pertama kali diinputkan adalah "SUBMITTED"
+- Data yang diinputkan adalah data laporan, suspect dan journey
 ```
