@@ -23,12 +23,13 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
+# Copy entire application code first
+COPY . .
+
 # Copy composer files first to cache dependency layer
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-reqs
 
-# Copy entire application code first
-COPY . .
 
 # Set permission Laravel
 RUN chown -R www-data:www-data storage bootstrap/cache
