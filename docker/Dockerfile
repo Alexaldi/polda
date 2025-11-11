@@ -1,27 +1,40 @@
 FROM php:8.2-fpm-alpine
 
 # Install system dependencies
-RUN apk add --no-cache bash curl git icu-dev libzip-dev oniguruma-dev zlib-dev
+RUN apk add --no-cache \
+    bash curl git icu-dev libzip-dev oniguruma-dev zlib-dev \
+    freetype-dev libpng-dev libjpeg-turbo-dev
 
-# PHP extensions commonly needed by Laravel
-RUN docker-php-ext-install pdo pdo_mysql mbstring bcmath zip exif
+# Install PHP extensions
+RUN docker-php-ext-install \
+    pdo pdo_mysql mbstring bcmath zip exif pcntl
 
-# Enable Opcache (optional)
+# Optional image extension
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd
+
+# Enable opcache
 RUN docker-php-ext-install opcache \
-    && { echo "opcache.enable=1"; echo "opcache.enable_cli=1"; } > /usr/local/etc/php/conf.d/opcache.ini
+    && echo "opcache.enable=1" > /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/opcache.ini
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copy composer.json first
-COPY composer.json ./
-
-# Install PHP dependencies without composer.lock
+# Copy composer files first to cache dependency layer
+COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-reqs
 
-# Copy application code
+# Copy entire application code first
 COPY . .
+
+# Set permission Laravel
+RUN chown -R www-data:www-data storage bootstrap/cache
+
+USER www-data
+
+EXPOSE 9000
 
 CMD ["php-fpm"]

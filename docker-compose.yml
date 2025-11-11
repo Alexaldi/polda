@@ -1,11 +1,15 @@
 services:
   app:
     build:
-      context: ./docker
+      context: .
+      dockerfile: docker/Dockerfile
     image: polda-php:latest
     container_name: polda-app
     volumes:
-      - /home/propam/apps/polda:/var/www/html
+      # Jangan mount seluruh project, hanya folder yang perlu write access:
+      - /home/propam/apps/polda/storage:/var/www/html/storage
+      - /home/propam/apps/polda/bootstrap/cache:/var/www/html/bootstrap/cache
+      - /home/propam/apps/polda/.env:/var/www/html/.env
     networks:
       - polda_net
     restart: unless-stopped
