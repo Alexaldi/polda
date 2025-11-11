@@ -69,7 +69,7 @@
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('divisions.index') }}">Sub Bagian</a></li>
-                        <li><a href="#">Unit</a></li>
+                        <li><a href="#">Journey</a></li>
                     </ul>
                 </li>
             </ul>

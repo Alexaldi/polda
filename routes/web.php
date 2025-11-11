@@ -5,12 +5,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubDivisionController;
 use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\JourneyController;
+use App\Http\Controllers\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,5 +63,12 @@ Route::middleware(['auth'])->group(
         // divisi routes
         Route::resource('divisions', DivisionController::class);
         Route::get('datatables/division', [DivisionController::class, 'datatables'])->name('datatables.division');
-    }
+
+        //dummy page for journey feature (cant delete it after merge)
+        Route::get('/reports/{id}', [ReportController::class, 'show'])->name('reports.show');
+
+        Route::post('/journeys/{report}', [JourneyController::class, 'store'])
+            ->name('journeys.store');
+
+        }
 );
