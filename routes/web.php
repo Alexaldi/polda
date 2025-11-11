@@ -71,4 +71,10 @@ Route::middleware(['auth'])->group(
             ->name('journeys.store');
 
         }
+        // Ubah resource route
+        Route::resource('sub-bagian', DivisionController::class)->names('divisions');
+        Route::get('datatables/sub-bagian', [DivisionController::class, 'datatables'])
+            ->name('datatables.division');
+
+    }
 );
