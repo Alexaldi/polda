@@ -15,9 +15,13 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# You can uncomment the following lines to build dependencies during image build
-# COPY composer.json composer.lock ./
-# RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-# COPY . .
+# Copy composer files first to leverage Docker cache
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+# Copy application code
+COPY . .
 
 CMD ["php-fpm"]
