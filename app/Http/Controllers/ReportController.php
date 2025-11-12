@@ -34,4 +34,5 @@ class ReportController extends Controller
             'divisions' => $divisions,
         ]);
     }
+
 }

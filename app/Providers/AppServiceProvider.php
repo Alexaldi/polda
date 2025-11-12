@@ -18,6 +18,8 @@ use App\Repositories\RoleRepository;
 use App\Repositories\SubDivisionRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Support\ServiceProvider;
+use App\Repositories\UserRepository;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
