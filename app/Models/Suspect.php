@@ -14,4 +14,9 @@ class Suspect extends Model
         'name',
         'description',
     ];
+
+    public function report()
+    {
+        return $this->belongsTo(Report::class);
+    }
 }

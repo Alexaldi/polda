@@ -22,4 +22,34 @@ class Report extends Model
         'code',
         'finish_time',
     ];
+
+    public function suspects()
+    {
+        return $this->hasMany(Suspect::class);
+    }
+
+    public function reportJourneys()
+    {
+        return $this->hasMany(ReportJourney::class);
+    }
+
+    public function reportCategory()
+    {
+        return $this->belongsTo(ReportCategory::class, 'category_id');
+    }
+
+    public function province()
+    {
+        return $this->belongsTo(Province::class, 'province_id');
+    }
+
+    public function city()
+    {
+        return $this->belongsTo(City::class, 'city_id');
+    }
+
+    public function district()
+    {
+        return $this->belongsTo(District::class, 'district_id');
+    }
 }
