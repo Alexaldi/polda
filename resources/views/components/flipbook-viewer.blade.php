@@ -33,9 +33,6 @@
             </div>
         </div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js" integrity="sha512-6IJew7nmrBDW4Ka6vvsib9MBXuty0YFRJ7ke1+NetNUA8JvYPRd8mqF0oKm1DMncdSog0UbieiCO2vlF0pT1uA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js" integrity="sha512-fzbA+ofX6jDA0AnqvshxwEudbOi6JQm1nVpi18T4imv0uoXmmHQEuP4liAiRcL4MSkXCTU6YclzGiUcuUf3E4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/4.1.0/turn.min.js" integrity="sha512-ZcpufY4majK9/2FwU+K20VOU2Asn0AmsCtU8/L1oQHZ30lVAOtnwBSuPYqx610LdNIujEHPuujSQtpItMzFrMg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const modalEl = document.getElementById('flipbookModal');
@@ -49,7 +46,89 @@
             const downloadButton = modalEl.querySelector('[data-flipbook-download]');
             const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
 
+            const PDF_JS_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+            const PDF_WORKER_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+            const TURN_JS_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/turn.js/4.1.0/turn.min.js';
+            const JQUERY_SRC = 'https://code.jquery.com/jquery-3.6.0.min.js';
+
             let currentUrl = null;
+            let libraryPromise = null;
+
+            function loadScriptOnce(src) {
+                return new Promise(function (resolve, reject) {
+                    let script = document.querySelector('script[data-dynamic-src="' + src + '"]');
+
+                    if (script) {
+                        if (script.getAttribute('data-loaded') === 'true') {
+                            resolve();
+                            return;
+                        }
+
+                        script.addEventListener('load', function () { resolve(); }, { once: true });
+                        script.addEventListener('error', function () { reject(new Error('Gagal memuat script: ' + src)); }, { once: true });
+                        return;
+                    }
+
+                    script = document.createElement('script');
+                    script.src = src;
+                    script.async = true;
+                    script.setAttribute('data-dynamic-src', src);
+                    script.addEventListener('load', function () {
+                        script.setAttribute('data-loaded', 'true');
+                        resolve();
+                    }, { once: true });
+                    script.addEventListener('error', function () {
+                        script.remove();
+                        reject(new Error('Gagal memuat script: ' + src));
+                    }, { once: true });
+
+                    document.head.appendChild(script);
+                });
+            }
+
+            function ensureJquery() {
+                if (window.jQuery && typeof window.jQuery === 'function') {
+                    return Promise.resolve(window.jQuery);
+                }
+
+                return loadScriptOnce(JQUERY_SRC).then(function () {
+                    if (!window.jQuery) {
+                        throw new Error('jQuery tidak tersedia');
+                    }
+
+                    return window.jQuery;
+                });
+            }
+
+            function ensureLibraries() {
+                if (!libraryPromise) {
+                    libraryPromise = ensureJquery()
+                        .then(function () {
+                            return loadScriptOnce(PDF_JS_SRC);
+                        })
+                        .then(function () {
+                            if (!window.pdfjsLib) {
+                                throw new Error('pdf.js tidak ditemukan');
+                            }
+
+                            window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDF_WORKER_SRC;
+
+                            return loadScriptOnce(TURN_JS_SRC);
+                        })
+                        .then(function () {
+                            if (!window.jQuery || !window.jQuery.fn.turn) {
+                                throw new Error('Turn.js tidak tersedia');
+                            }
+                        })
+                        .catch(function (error) {
+                            console.error('Gagal memuat library flipbook:', error);
+                            libraryPromise = null;
+                            throw error;
+                        });
+                }
+
+                return libraryPromise;
+            }
 
             function resolveUrl(url) {
                 if (!url) {
@@ -88,10 +167,20 @@
                 }
             }
 
-            function showMessage(message) {
+            function showLoading() {
+                if (loadingWrapper) {
+                    loadingWrapper.classList.remove('d-none');
+                }
+            }
+
+            function hideLoading() {
                 if (loadingWrapper) {
                     loadingWrapper.classList.add('d-none');
                 }
+            }
+
+            function showMessage(message) {
+                hideLoading();
 
                 if (!messageWrapper) {
                     return;
@@ -110,22 +199,6 @@
                 messageWrapper.classList.remove('d-none');
             }
 
-            function showLoading() {
-                if (loadingWrapper) {
-                    loadingWrapper.classList.remove('d-none');
-                }
-
-                if (messageWrapper) {
-                    messageWrapper.classList.add('d-none');
-                }
-            }
-
-            function hideLoading() {
-                if (loadingWrapper) {
-                    loadingWrapper.classList.add('d-none');
-                }
-            }
-
             function ensureDownload(url) {
                 if (!downloadButton) {
                     return;
@@ -136,84 +209,79 @@
             }
 
             function renderFlipbook(url) {
-                if (!container) {
-                    showMessage('Pratinjau flipbook tidak tersedia di perangkat ini.');
-                    return;
+                if (!container || !window.pdfjsLib) {
+                    showMessage('Pratinjau flipbook tidak tersedia.');
+                    return Promise.reject(new Error('Container atau pdf.js tidak siap'));
                 }
 
-                if (!window.pdfjsLib) {
-                    showMessage('PDF.js tidak tersedia.');
-                    return;
-                }
+                return window.pdfjsLib
+                    .getDocument({ url: url, withCredentials: true })
+                    .promise.then(function (pdf) {
+                        container.innerHTML = '';
+                        const renderTasks = [];
 
-                try {
-                    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-                } catch (error) {
-                    // abaikan ketika pdf.js sudah diatur sebelumnya
-                }
+                        for (let page = 1; page <= pdf.numPages; page++) {
+                            renderTasks.push(
+                                pdf.getPage(page).then(function (pdfPage) {
+                                    const viewport = pdfPage.getViewport({ scale: 1.1 });
+                                    const canvas = document.createElement('canvas');
+                                    const context = canvas.getContext('2d');
+                                    canvas.height = viewport.height;
+                                    canvas.width = viewport.width;
 
-                window.pdfjsLib.getDocument(url).promise.then(function (pdf) {
-                    container.innerHTML = '';
-                    const renderTasks = [];
+                                    return pdfPage.render({ canvasContext: context, viewport: viewport }).promise.then(function () {
+                                        const wrapper = document.createElement('div');
+                                        wrapper.className = 'page bg-white d-flex justify-content-center align-items-center';
+                                        wrapper.appendChild(canvas);
+                                        container.appendChild(wrapper);
+                                    });
+                                })
+                            );
+                        }
 
-                    for (let page = 1; page <= pdf.numPages; page++) {
-                        renderTasks.push(
-                            pdf.getPage(page).then(function (pdfPage) {
-                                const viewport = pdfPage.getViewport({ scale: 1.1 });
-                                const canvas = document.createElement('canvas');
-                                const context = canvas.getContext('2d');
-                                canvas.height = viewport.height;
-                                canvas.width = viewport.width;
-
-                                return pdfPage.render({ canvasContext: context, viewport }).promise.then(function () {
-                                    const wrapper = document.createElement('div');
-                                    wrapper.className = 'page bg-white d-flex justify-content-center align-items-center';
-                                    wrapper.appendChild(canvas);
-                                    container.appendChild(wrapper);
-                                });
-                            })
-                        );
-                    }
-
-                    return Promise.all(renderTasks)
-                        .then(function () {
-                            hideLoading();
-
-                            if (window.jQuery && typeof window.jQuery.fn.turn === 'function') {
-                                const $container = window.jQuery(container);
-
-                                if ($container.data('turn')) {
-                                    $container.turn('destroy');
-                                }
-
-                                const modalBody = modalEl.querySelector('.modal-body');
-                                const width = (modalBody ? modalBody.clientWidth : container.clientWidth) || 960;
-                                const height = (modalBody ? modalBody.clientHeight : container.clientHeight) || 600;
-
-                                $container.turn({
-                                    width,
-                                    height,
-                                    autoCenter: true,
-                                    gradients: true,
-                                    elevation: 50,
-                                });
-
-                                $container.addClass('shadow');
-                            } else {
-                                container.classList.add('d-flex', 'flex-column', 'gap-3', 'p-3');
-                                const notice = document.createElement('div');
-                                notice.className = 'alert alert-info text-center';
-                                notice.textContent = 'Library Turn.js tidak tersedia. Menampilkan halaman PDF secara berurutan.';
-                                container.prepend(notice);
+                        return Promise.all(renderTasks)
+                            .then(function () {
                                 hideLoading();
-                            }
-                        })
-                        .catch(function () {
-                            showMessage('Gagal merender halaman PDF.');
-                        });
-                }).catch(function () {
-                    showMessage('Gagal memuat file PDF.');
-                });
+
+                                if (window.jQuery && typeof window.jQuery.fn.turn === 'function') {
+                                    const $container = window.jQuery(container);
+
+                                    if ($container.data('turn')) {
+                                        $container.turn('destroy');
+                                    }
+
+                                    const modalBody = modalEl.querySelector('.modal-body');
+                                    const width = (modalBody ? modalBody.clientWidth : container.clientWidth) || 960;
+                                    const height = (modalBody ? modalBody.clientHeight : container.clientHeight) || 600;
+
+                                    $container.turn({
+                                        width: width,
+                                        height: height,
+                                        autoCenter: true,
+                                        gradients: true,
+                                        elevation: 50,
+                                    });
+
+                                    $container.addClass('shadow');
+                                } else {
+                                    container.classList.add('d-flex', 'flex-column', 'gap-3', 'p-3');
+                                    const notice = document.createElement('div');
+                                    notice.className = 'alert alert-info text-center';
+                                    notice.textContent = 'Library Turn.js tidak tersedia. Menampilkan halaman PDF secara berurutan.';
+                                    container.prepend(notice);
+                                }
+                            })
+                            .catch(function (error) {
+                                console.error('Gagal merender halaman PDF:', error);
+                                showMessage('Gagal merender halaman PDF.');
+                                throw error;
+                            });
+                    })
+                    .catch(function (error) {
+                        console.error('Gagal memuat file PDF:', error);
+                        showMessage('Gagal memuat file PDF.');
+                        throw error;
+                    });
             }
 
             window.ReportFlipbook = window.ReportFlipbook || {};
@@ -233,7 +301,13 @@
                 showLoading();
                 modalInstance.show();
 
-                renderFlipbook(resolvedUrl);
+                ensureLibraries()
+                    .then(function () {
+                        return renderFlipbook(resolvedUrl);
+                    })
+                    .catch(function () {
+                        showMessage('Mode flipbook tidak dapat dimuat. Silakan gunakan tombol unduh.');
+                    });
             };
 
             modalEl.addEventListener('hidden.bs.modal', function () {
