@@ -160,7 +160,6 @@ class JourneyDataTest extends TestCase
             database_path('migrations/2025_11_10_142745_create_report_journeys_table.php'),
             database_path('migrations/2025_11_10_142756_create_report_evidence_table.php'),
             database_path('migrations/2025_11_11_000001_rename_report_evidence_table.php'),
-            database_path('migrations/2025_11_12_000000_create_report_follow_ups_table.php'),
         ];
     }
 }

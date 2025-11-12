@@ -10,7 +10,6 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubDivisionController;
 use App\Http\Controllers\DivisionController;
-use App\Http\Controllers\ReportFollowUpController;
 use App\Http\Controllers\ReportJourneyController;
 use App\Http\Controllers\ReportController;
 
@@ -26,7 +25,6 @@ use App\Http\Controllers\ReportController;
 */
 
 Auth::routes();
-
 Route::middleware(['auth'])->group(function () {
         // dashboard routes
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
@@ -51,6 +49,7 @@ Route::middleware(['auth'])->group(function () {
         //intitution routes
         Route::get('institutions/datatables', [InstitutionController::class, 'datatables'])->name('institutions.datatables');
         Route::resource('institutions', InstitutionController::class);
+        Route::resource('institutions', InstitutionController::class);
         
         //division and sub duvision routes
         Route::resource('unit', SubDivisionController::class)->names('subdivisions');
@@ -72,7 +71,5 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/reports/{report}/journeys', [ReportJourneyController::class, 'store'])
             ->name('reports.journeys.store');
 
-        Route::post('/reports/{report}/follow-ups', [ReportFollowUpController::class, 'store'])
-            ->name('reports.followups.store');
-    }
-);
+
+    });

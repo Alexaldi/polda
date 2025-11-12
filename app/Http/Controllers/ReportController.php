@@ -21,11 +21,6 @@ class ReportController extends Controller
 
         $journeys = $this->journeyService->paginateByReport($report->id, 5);
 
-        $followUps = $report->followUps()
-            ->with('user')
-            ->orderByDesc('created_at')
-            ->paginate(5);
-
         $institutions = Institution::orderBy('name')->get(['id', 'name']);
         $divisions = Division::orderBy('name')->get(['id', 'name', 'institution_id']);
 
@@ -34,7 +29,6 @@ class ReportController extends Controller
         return view('pages.reports.detail', [
             'report' => $report,
             'journeys' => $journeys,
-            'followUps' => $followUps,
             'journeyTypes' => $journeyTypes,
             'institutions' => $institutions,
             'divisions' => $divisions,

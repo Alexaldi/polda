@@ -39,9 +39,20 @@ class Report extends Model
         return $this->belongsTo(ReportCategory::class, 'category_id');
     }
 
-    public function followUps()
+    protected static function booted(): void
     {
-        return $this->hasMany(ReportFollowUp::class, 'report_id');
+        static::created(function (Report $report): void {
+            if ($report->journeys()->exists()) {
+                return;
+            }
+
+            $report->journeys()->create([
+                'type' => ReportJourneyType::SUBMITTED->value,
+                'description' => [
+                    'text' => 'Laporan diterima oleh sistem.',
+                ],
+            ]);
+        });
     }
 
     protected static function booted(): void
