@@ -83,10 +83,14 @@ class JourneyDataTest extends TestCase
         ]);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         $response->assertRedirect();
 =======
         $response->assertRedirect(route('reports.show', $report->id));
 >>>>>>> 02a3e64 (test: verify journey multi-upload success)
+=======
+        $response->assertRedirect(route('reports.show', $report->id));
+>>>>>>> 3d57bc4bd70e3aac3b06ee5b357fcda2414ab552
         $response->assertSessionHas('success', 'Tahapan penanganan berhasil ditambahkan.');
 
         $this->assertDatabaseCount('report_journeys', 1);
@@ -158,6 +162,7 @@ class JourneyDataTest extends TestCase
             database_path('migrations/2025_11_10_142745_create_report_journeys_table.php'),
             database_path('migrations/2025_11_10_142756_create_report_evidence_table.php'),
             database_path('migrations/2025_11_11_000001_rename_report_evidence_table.php'),
+            database_path('migrations/2025_11_12_000000_create_report_follow_ups_table.php'),
         ];
     }
 }

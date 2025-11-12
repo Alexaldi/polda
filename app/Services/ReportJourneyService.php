@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Interfaces\ReportJourneyRepositoryInterface;
 use App\Models\ReportEvidence;
 <<<<<<< HEAD
+<<<<<<< HEAD
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 =======
@@ -13,6 +14,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 >>>>>>> 02a3e64 (test: verify journey multi-upload success)
+=======
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
+>>>>>>> 3d57bc4bd70e3aac3b06ee5b357fcda2414ab552
 
 class ReportJourneyService
 {
@@ -22,12 +29,19 @@ class ReportJourneyService
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     public function store(array $data, array $files = [])
+=======
+    public function store(array $data, array $files = []): array
+>>>>>>> 3d57bc4bd70e3aac3b06ee5b357fcda2414ab552
     {
-        return DB::transaction(function () use ($data, $files) {
+        DB::beginTransaction();
+
+        try {
             $journey = $this->repository->store($data);
 
             foreach ($files as $file) {
+<<<<<<< HEAD
 =======
     public function store(array $data, array $files = []): array
     {
@@ -37,11 +51,16 @@ class ReportJourneyService
             $journey = $this->repository->store($data);
 
             foreach ($files as $file) {
+=======
+>>>>>>> 3d57bc4bd70e3aac3b06ee5b357fcda2414ab552
                 if (! $file instanceof UploadedFile) {
                     continue;
                 }
 
+<<<<<<< HEAD
 >>>>>>> 02a3e64 (test: verify journey multi-upload success)
+=======
+>>>>>>> 3d57bc4bd70e3aac3b06ee5b357fcda2414ab552
                 $storedPath = $file->store('evidences', 'public');
 
                 ReportEvidence::create([
@@ -53,9 +72,12 @@ class ReportJourneyService
             }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             return $journey;
         });
 =======
+=======
+>>>>>>> 3d57bc4bd70e3aac3b06ee5b357fcda2414ab552
             DB::commit();
 
             return [
@@ -73,6 +95,9 @@ class ReportJourneyService
                 'message' => 'Gagal menambahkan tahapan penanganan.',
             ];
         }
+<<<<<<< HEAD
 >>>>>>> 02a3e64 (test: verify journey multi-upload success)
+=======
+>>>>>>> 3d57bc4bd70e3aac3b06ee5b357fcda2414ab552
     }
 }

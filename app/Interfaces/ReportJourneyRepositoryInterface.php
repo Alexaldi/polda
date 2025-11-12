@@ -2,9 +2,12 @@
 
 namespace App\Interfaces;
 
+use App\Models\ReportJourney;
+
 <<<<<<< HEAD
 interface ReportJourneyRepositoryInterface
 {
+    public function store(array $data): ReportJourney;
     public function store(array $data);
 =======
 use App\Models\ReportJourney;
