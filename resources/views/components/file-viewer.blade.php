@@ -1,12 +1,12 @@
 <div class="modal fade" id="fileViewerModal" tabindex="-1" aria-labelledby="fileViewerModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-fullscreen-sm-down">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
+        <div class="modal-content" data-viewer-modal>
+            <div class="modal-header border-0">
                 <h5 class="modal-title" id="fileViewerModalLabel">Pratinjau Bukti</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body position-relative">
-                <div class="d-flex justify-content-center align-items-center py-5 d-none" data-viewer-loading>
+                <div class="viewer-loading d-flex justify-content-center align-items-center py-5" data-viewer-loading>
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Memuat...</span>
                     </div>
@@ -17,18 +17,24 @@
                         title="File preview"
                         frameborder="0"
                         allowfullscreen
+                        allow="cross-origin"
                         class="rounded shadow-sm"
                         referrerpolicy="no-referrer"
                         data-viewer-iframe
                     ></iframe>
                 </div>
-                <div class="text-center d-none" data-viewer-image>
-                    <img src="" alt="Pratinjau file" class="img-fluid rounded shadow" data-viewer-image-el>
+                <div class="viewer-image-wrapper d-none" data-viewer-image>
+                    <img
+                        src=""
+                        alt="Pratinjau file"
+                        class="img-fluid rounded shadow"
+                        referrerpolicy="no-referrer"
+                        data-viewer-image-el
+                    />
                 </div>
-                <div class="docx-preview-wrapper d-none" data-viewer-docx></div>
-                <div class="d-none" data-viewer-message></div>
+                <div class="viewer-message d-none" data-viewer-message></div>
             </div>
-            <div class="modal-footer d-flex justify-content-between flex-wrap gap-2">
+            <div class="modal-footer border-0 d-flex justify-content-between flex-wrap gap-2">
                 <div class="d-flex flex-wrap gap-2">
                     <button type="button" class="btn btn-outline-primary d-none" data-open-flipbook>
                         <i class="fa fa-book-open me-1"></i> Mode Flipbook
@@ -52,29 +58,78 @@
 
 @once
     <style>
-        #fileViewerModal .modal-body iframe {
+        #fileViewerModal .modal-content {
             background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        #fileViewerModal .modal-header,
+        #fileViewerModal .modal-footer {
+            background-color: transparent;
+        }
+
+        #fileViewerModal .viewer-loading {
+            min-height: 220px;
+        }
+
+        #fileViewerModal .ratio {
+            transition: opacity 0.2s ease;
+        }
+
+        #fileViewerModal [data-viewer-frame] iframe {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bs-body-bg);
+        }
+
+        #fileViewerModal .viewer-image-wrapper {
+            background-color: var(--bs-body-bg);
+            padding: 1.25rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 220px;
+        }
+
+        #fileViewerModal .viewer-message {
+            min-height: 120px;
+        }
+
+        #fileViewerModal .viewer-message .alert {
+            border: 0;
+            border-radius: 0.75rem;
+            background-color: rgba(15, 23, 42, 0.08);
+            color: #0f172a;
         }
 
         body.dark-version #fileViewerModal .modal-content,
         body[data-bs-theme="dark"] #fileViewerModal .modal-content {
-            color: #f1f5f9;
             background-color: #0d1117;
-        }
-
-        body.dark-version #fileViewerModal .modal-body iframe,
-        body[data-bs-theme="dark"] #fileViewerModal .modal-body iframe {
-            background-color: #0d1117;
-        }
-
-        body.dark-version #fileViewerModal .docx-preview-wrapper,
-        body[data-bs-theme="dark"] #fileViewerModal .docx-preview-wrapper {
             color: #f1f5f9;
         }
 
-        #fileViewerModal .docx-preview-wrapper {
-            max-height: 70vh;
-            overflow-y: auto;
+        body.dark-version #fileViewerModal .btn-close,
+        body[data-bs-theme="dark"] #fileViewerModal .btn-close {
+            filter: invert(1) grayscale(100%);
+        }
+
+        body.dark-version #fileViewerModal [data-viewer-frame] iframe,
+        body[data-bs-theme="dark"] #fileViewerModal [data-viewer-frame] iframe,
+        body.dark-version #fileViewerModal .viewer-image-wrapper,
+        body[data-bs-theme="dark"] #fileViewerModal .viewer-image-wrapper {
+            background-color: #0d1117;
+        }
+
+        body.dark-version #fileViewerModal .viewer-message .alert,
+        body[data-bs-theme="dark"] #fileViewerModal .viewer-message .alert {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #f1f5f9;
+        }
+
+        body.dark-version #fileViewerModal .modal-footer,
+        body[data-bs-theme="dark"] #fileViewerModal .modal-footer {
+            border-top-color: rgba(148, 163, 184, 0.2);
         }
     </style>
 @endonce
@@ -93,20 +148,46 @@
             const iframeEl = modalEl.querySelector('[data-viewer-iframe]');
             const imageWrapper = modalEl.querySelector('[data-viewer-image]');
             const imageEl = modalEl.querySelector('[data-viewer-image-el]');
-            const docxWrapper = modalEl.querySelector('[data-viewer-docx]');
             const messageWrapper = modalEl.querySelector('[data-viewer-message]');
             const downloadButton = modalEl.querySelector('[data-download-button]');
             const flipbookButton = modalEl.querySelector('[data-open-flipbook]');
+            const modalContent = modalEl.querySelector('[data-viewer-modal]');
 
             const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
             const officeExtensions = ['doc', 'docx'];
             const pdfExtension = 'pdf';
 
-            const MAMMOTH_SRC = 'https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js';
+            const GOOGLE_VIEWER = 'https://docs.google.com/gview?embedded=true&url=';
+            const PDF_VIEWER = 'https://mozilla.github.io/pdf.js/web/viewer.html?file=';
 
             let currentUrl = null;
             let frameTimeout = null;
+            let availabilityAbort = null;
             let pendingFlipbookUrl = null;
+
+            function isDarkMode() {
+                return (
+                    document.body.classList.contains('dark-version') ||
+                    document.body.getAttribute('data-bs-theme') === 'dark'
+                );
+            }
+
+            function applyTheme() {
+                if (!modalContent) {
+                    return;
+                }
+
+                const dark = isDarkMode();
+                modalContent.classList.toggle('theme-dark', dark);
+            }
+
+            applyTheme();
+
+            const themeObserver = new MutationObserver(applyTheme);
+            themeObserver.observe(document.body, {
+                attributes: true,
+                attributeFilter: ['class', 'data-bs-theme'],
+            });
 
             function resolveUrl(url) {
                 if (!url) {
@@ -120,58 +201,74 @@
                 }
             }
 
-            function loadScriptOnce(src) {
-                return new Promise(function (resolve, reject) {
-                    let script = document.querySelector('script[data-dynamic-src="' + src + '"]');
+            function cancelAvailabilityCheck() {
+                if (availabilityAbort) {
+                    availabilityAbort.abort();
+                    availabilityAbort = null;
+                }
+            }
 
-                    if (script) {
-                        if (script.getAttribute('data-loaded') === 'true') {
-                            resolve();
-                            return;
+            function checkFileAvailability(url) {
+                cancelAvailabilityCheck();
+
+                if (!url) {
+                    return Promise.resolve({ status: 'error', code: 0 });
+                }
+
+                availabilityAbort = new AbortController();
+                const controller = availabilityAbort;
+                const timeout = window.setTimeout(function () {
+                    controller.abort();
+                }, 8000);
+
+                return fetch(url, {
+                    method: 'HEAD',
+                    mode: 'cors',
+                    referrerPolicy: 'no-referrer',
+                    signal: controller.signal,
+                    credentials: 'omit',
+                })
+                    .then(function (response) {
+                        window.clearTimeout(timeout);
+                        availabilityAbort = null;
+
+                        if (!response.ok) {
+                            const code = response.status;
+                            if ([403, 404, 502].includes(code)) {
+                                return { status: 'error', code: code };
+                            }
                         }
 
-                        script.addEventListener('load', function () { resolve(); }, { once: true });
-                        script.addEventListener('error', function () { reject(new Error('Gagal memuat skrip: ' + src)); }, { once: true });
-                        return;
-                    }
+                        return { status: 'ok', code: response.status };
+                    })
+                    .catch(function (error) {
+                        window.clearTimeout(timeout);
+                        availabilityAbort = null;
 
-                    script = document.createElement('script');
-                    script.src = src;
-                    script.async = true;
-                    script.setAttribute('data-dynamic-src', src);
-                    script.addEventListener('load', function () {
-                        script.setAttribute('data-loaded', 'true');
-                        resolve();
-                    }, { once: true });
-                    script.addEventListener('error', function () {
-                        script.remove();
-                        reject(new Error('Gagal memuat skrip: ' + src));
-                    }, { once: true });
+                        if (error && error.name === 'AbortError') {
+                            return { status: 'unknown' };
+                        }
 
-                    document.head.appendChild(script);
-                });
+                        return { status: 'unknown' };
+                    });
             }
 
             function resetState() {
-                [loadingWrapper, frameWrapper, imageWrapper, messageWrapper, docxWrapper].forEach(function (element) {
-                    if (!element) {
-                        return;
-                    }
+                cancelAvailabilityCheck();
 
-                    element.classList.add('d-none');
+                [loadingWrapper, frameWrapper, imageWrapper, messageWrapper].forEach(function (element) {
+                    if (element) {
+                        element.classList.add('d-none');
+                    }
                 });
 
                 if (iframeEl) {
-                    iframeEl.removeAttribute('srcdoc');
-                    iframeEl.src = 'about:blank';
+                    iframeEl.removeAttribute('src');
+                    iframeEl.setAttribute('src', 'about:blank');
                 }
 
                 if (imageEl) {
                     imageEl.src = '';
-                }
-
-                if (docxWrapper) {
-                    docxWrapper.innerHTML = '';
                 }
 
                 if (messageWrapper) {
@@ -179,8 +276,8 @@
                 }
 
                 if (downloadButton) {
-                    downloadButton.classList.remove('disabled');
                     downloadButton.href = '#';
+                    downloadButton.classList.toggle('disabled', true);
                 }
 
                 if (flipbookButton) {
@@ -189,7 +286,7 @@
                 }
 
                 if (frameTimeout) {
-                    clearTimeout(frameTimeout);
+                    window.clearTimeout(frameTimeout);
                     frameTimeout = null;
                 }
             }
@@ -206,21 +303,28 @@
                 }
             }
 
-            function showMessage(message, type = 'info') {
+            function showMessage(message, type) {
                 hideLoading();
 
                 if (!messageWrapper) {
                     return;
                 }
 
-                const alertType = type === 'warning' ? 'alert-warning' : 'alert-info';
+                const isDark = isDarkMode();
+                const typeClass =
+                    type === 'danger'
+                        ? 'alert-danger'
+                        : type === 'warning'
+                        ? 'alert-warning'
+                        : 'alert-info';
+
                 const manualLink = currentUrl
-                    ? `<a href="${currentUrl}" target="_blank" rel="noopener" class="btn btn-link p-0">Gunakan tombol unduh di bawah</a>`
+                    ? `<a href="${currentUrl}" target="_blank" rel="noopener" class="btn btn-link btn-sm px-0">Gunakan tombol unduh</a>`
                     : '';
 
                 messageWrapper.innerHTML = `
-                    <div class="alert ${alertType} text-center mb-0">${message}</div>
-                    <div class="text-center mt-2">${manualLink}</div>
+                    <div class="alert ${typeClass} text-center mb-2" role="alert">${message}</div>
+                    <div class="text-center small ${isDark ? 'text-light' : 'text-muted'}">${manualLink}</div>
                 `;
 
                 messageWrapper.classList.remove('d-none');
@@ -232,142 +336,92 @@
                 }
 
                 downloadButton.href = url;
+                downloadButton.classList.toggle('disabled', !url);
             }
 
-            function setThemeColor(element) {
-                if (!element) {
+            function prepareIframe(src, errorMessage) {
+                if (!iframeEl || !frameWrapper) {
+                    showMessage(errorMessage || 'Pratinjau tidak tersedia saat ini.', 'warning');
                     return;
                 }
 
-                const isDark = document.body.classList.contains('dark-version') || document.body.getAttribute('data-bs-theme') === 'dark';
+                frameWrapper.classList.remove('d-none');
 
-                element.classList.toggle('text-white', isDark);
-                element.classList.toggle('bg-dark', isDark);
+                if (frameTimeout) {
+                    window.clearTimeout(frameTimeout);
+                }
+
+                const clearTimer = function () {
+                    if (frameTimeout) {
+                        window.clearTimeout(frameTimeout);
+                        frameTimeout = null;
+                    }
+                };
+
+                const handleLoad = function () {
+                    clearTimer();
+                    hideLoading();
+                };
+
+                const handleError = function () {
+                    clearTimer();
+                    hideLoading();
+                    showMessage(errorMessage || 'File tidak dapat dimuat, gunakan tombol unduh.', 'warning');
+                };
+
+                iframeEl.addEventListener('load', handleLoad, { once: true });
+                iframeEl.addEventListener('error', handleError, { once: true });
+
+                frameTimeout = window.setTimeout(function () {
+                    iframeEl.removeEventListener('load', handleLoad);
+                    iframeEl.removeEventListener('error', handleError);
+                    hideLoading();
+                    showMessage('Memuat file melebihi batas waktu. Gunakan tombol unduh.', 'warning');
+                }, 15000);
+
+                window.requestAnimationFrame(function () {
+                    iframeEl.src = src;
+                });
             }
 
             function showImagePreview(url) {
                 if (!imageWrapper || !imageEl) {
-                    showMessage('Pratinjau gambar tidak tersedia.');
+                    showMessage('Pratinjau gambar tidak tersedia.', 'warning');
                     return;
                 }
 
-                showLoading();
+                imageWrapper.classList.remove('d-none');
+                imageEl.src = '';
+
+                const timeoutId = window.setTimeout(function () {
+                    imageEl.onload = null;
+                    imageEl.onerror = null;
+                    hideLoading();
+                    showMessage('Memuat gambar melebihi batas waktu. Gunakan tombol unduh.', 'warning');
+                }, 15000);
 
                 imageEl.onload = function () {
+                    window.clearTimeout(timeoutId);
                     hideLoading();
                 };
 
                 imageEl.onerror = function () {
-                    showMessage('Gagal memuat pratinjau gambar. Silakan unduh file.');
+                    window.clearTimeout(timeoutId);
+                    hideLoading();
+                    showMessage('Gagal memuat pratinjau gambar. Gunakan tombol unduh.', 'danger');
                 };
 
                 imageEl.src = url;
-                imageWrapper.classList.remove('d-none');
-            }
-
-            function fetchAsBase64(url) {
-                return fetch(url, { credentials: 'include' })
-                    .then(function (response) {
-                        if (!response.ok) {
-                            throw new Error('Gagal mengambil file');
-                        }
-
-                        return response.arrayBuffer();
-                    })
-                    .then(function (buffer) {
-                        const bytes = new Uint8Array(buffer);
-                        const chunkSize = 0x8000;
-                        let binary = '';
-
-                        for (let i = 0; i < bytes.length; i += chunkSize) {
-                            const chunk = bytes.subarray(i, i + chunkSize);
-                            binary += String.fromCharCode.apply(null, chunk);
-                        }
-
-                        return window.btoa(binary);
-                    });
             }
 
             function showPdfPreview(url) {
-                if (!iframeEl || !frameWrapper) {
-                    showMessage('Pratinjau PDF tidak tersedia.');
-                    return;
-                }
-
-                showLoading();
-                frameWrapper.classList.remove('d-none');
-                setThemeColor(frameWrapper);
-
-                fetchAsBase64(url)
-                    .then(function (base64) {
-                        const dataUrl = 'data:application/pdf;base64,' + base64;
-                        const viewerUrl = 'https://mozilla.github.io/pdf.js/web/viewer.html?file=' + encodeURIComponent(dataUrl);
-
-                        iframeEl.src = viewerUrl;
-
-                        iframeEl.addEventListener('load', function handleLoad() {
-                            hideLoading();
-                            iframeEl.removeEventListener('load', handleLoad);
-                        }, { once: true });
-
-                        frameTimeout = window.setTimeout(function () {
-                            hideLoading();
-                        }, 12000);
-                    })
-                    .catch(function (error) {
-                        console.error('Gagal memuat PDF:', error);
-                        hideLoading();
-                        showMessage('Pratinjau PDF tidak dapat dimuat. Gunakan tombol unduh di bawah.', 'warning');
-                    });
-
-                if (flipbookButton) {
-                    flipbookButton.classList.remove('d-none');
-                    flipbookButton.setAttribute('data-file-url', url);
-                }
-            }
-
-            function ensureMammoth() {
-                if (window.mammoth) {
-                    return Promise.resolve();
-                }
-
-                return loadScriptOnce(MAMMOTH_SRC);
+                const viewerUrl = PDF_VIEWER + encodeURIComponent(url);
+                prepareIframe(viewerUrl, 'Pratinjau PDF tidak dapat dimuat, gunakan tombol unduh.');
             }
 
             function showDocxPreview(url) {
-                if (!docxWrapper) {
-                    showMessage('Pratinjau dokumen tidak tersedia.');
-                    return;
-                }
-
-                showLoading();
-                docxWrapper.classList.remove('d-none');
-                setThemeColor(docxWrapper);
-
-                ensureMammoth()
-                    .then(function () {
-                        return fetch(url, { credentials: 'include' });
-                    })
-                    .then(function (response) {
-                        if (!response.ok) {
-                            throw new Error('Gagal mengambil dokumen');
-                        }
-
-                        return response.arrayBuffer();
-                    })
-                    .then(function (arrayBuffer) {
-                        return window.mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
-                    })
-                    .then(function (result) {
-                        hideLoading();
-                        docxWrapper.innerHTML = `<div class="docx-preview-content">${result.value}</div>`;
-                    })
-                    .catch(function (error) {
-                        console.error('Gagal memuat DOCX:', error);
-                        hideLoading();
-                        docxWrapper.classList.add('d-none');
-                        showMessage('Pratinjau dokumen tidak dapat dimuat. Gunakan tombol unduh di bawah.', 'warning');
-                    });
+                const viewerUrl = GOOGLE_VIEWER + encodeURIComponent(url);
+                prepareIframe(viewerUrl, 'Pratinjau dokumen tidak dapat dimuat, gunakan tombol unduh.');
             }
 
             function detectExtension(url, provided) {
@@ -375,7 +429,8 @@
                     return provided.replace('.', '').toLowerCase();
                 }
 
-                const parts = url.split('?')[0].split('#')[0].split('.');
+                const sanitized = url.split('?')[0].split('#')[0];
+                const parts = sanitized.split('.');
                 return parts.length > 1 ? parts.pop().toLowerCase() : '';
             }
 
@@ -385,32 +440,49 @@
 
                 resetState();
                 showLoading();
+                applyTheme();
                 enableDownload(resolvedUrl);
 
                 const normalizedExtension = (extension || '').toLowerCase();
-                pendingFlipbookUrl = null;
+                const autoDetectedExtension = normalizedExtension || detectExtension(resolvedUrl, normalizedExtension);
 
-                if (normalizedExtension === pdfExtension) {
-                    pendingFlipbookUrl = resolvedUrl;
-                    showPdfPreview(resolvedUrl);
-                    modalInstance.show();
-                    return;
+                if (flipbookButton) {
+                    flipbookButton.classList.toggle('d-none', autoDetectedExtension !== pdfExtension);
+                    if (autoDetectedExtension === pdfExtension) {
+                        flipbookButton.setAttribute('data-file-url', resolvedUrl);
+                    } else {
+                        flipbookButton.removeAttribute('data-file-url');
+                    }
                 }
 
-                if (imageExtensions.includes(normalizedExtension)) {
-                    showImagePreview(resolvedUrl);
-                    modalInstance.show();
-                    return;
-                }
+                const continuePreview = function () {
+                    if (autoDetectedExtension === pdfExtension) {
+                        pendingFlipbookUrl = resolvedUrl;
+                        showPdfPreview(resolvedUrl);
+                    } else if (imageExtensions.includes(autoDetectedExtension)) {
+                        showImagePreview(resolvedUrl);
+                    } else if (officeExtensions.includes(autoDetectedExtension)) {
+                        showDocxPreview(resolvedUrl);
+                    } else {
+                        hideLoading();
+                        showMessage('Pratinjau tidak tersedia untuk tipe file ini. Gunakan tombol unduh.', 'warning');
+                    }
+                };
 
-                if (officeExtensions.includes(normalizedExtension)) {
-                    showDocxPreview(resolvedUrl);
-                    modalInstance.show();
-                    return;
-                }
+                checkFileAvailability(resolvedUrl)
+                    .then(function (status) {
+                        if (status.status === 'error') {
+                            hideLoading();
+                            showMessage('File tidak dapat dimuat, gunakan tombol unduh.', 'danger');
+                            return;
+                        }
 
-                hideLoading();
-                showMessage('Pratinjau tidak tersedia untuk tipe file ini. Gunakan tombol unduh di bawah.', 'warning');
+                        continuePreview();
+                    })
+                    .catch(function () {
+                        continuePreview();
+                    });
+
                 modalInstance.show();
             }
 
@@ -479,6 +551,15 @@
                 resetState();
                 currentUrl = null;
             });
+
+            window.ReportViewer = window.ReportViewer || {};
+            window.ReportViewer.open = function (fileUrl, fileType) {
+                openPreview(fileUrl, fileType);
+            };
+            window.ReportViewer.modal = modalInstance;
+
+            // Contoh pemanggilan:
+            // window.ReportViewer.open('https://contoh.com/file.pdf', 'pdf');
         });
     </script>
 @endonce
