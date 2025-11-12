@@ -11,12 +11,15 @@ use App\Interfaces\UserRepositoryInterface;
 use App\Interfaces\RoleRepositoryInterface;
 use App\Interfaces\PermissionRepositoryInterface;
 use App\Interfaces\InstitutionRepositoryInterface;
-use App\Interfaces\ReportJourneyRepositoryInterface;
+use App\Interfaces\ReportFollowUpRepositoryInterface;
+use App\Interfaces\ReportReportJourneyRepositoryInterface;
 use App\Interfaces\ProfileRepositoryInterface;
+use App\Interfaces\ReportJourneyRepositoryInterface;
 use App\Interfaces\SubDivisionRepositoryInterface;
 use App\Repositories\DivisionRepository;
-use App\Repositories\ReportJourneyRepository;
+use App\Repositories\JourneyRepository;
 use App\Repositories\ProfileRepository;
+use App\Repositories\ReportJourneyRepository;
 use App\Repositories\SubDivisionRepository;
 
 class AppServiceProvider extends ServiceProvider

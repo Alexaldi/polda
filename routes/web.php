@@ -71,4 +71,10 @@ Route::middleware(['auth'])->group(
         Route::post('/reports/{report}/journeys', [ReportJourneyController::class, 'store'])
             ->name('reports.journeys.store');
     }
+        Route::post('/reports/{report}/journeys', [ReportJourneyController::class, 'store'])
+            ->name('reports.journeys.store');
+
+        Route::post('/reports/{report}/follow-ups', [ReportFollowUpController::class, 'store'])
+            ->name('reports.followups.store');
+    }
 );

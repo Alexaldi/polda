@@ -48,3 +48,4 @@ class ReportJourneyController extends Controller
             ->withInput();
     }
 }
+
