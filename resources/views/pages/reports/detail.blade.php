@@ -29,22 +29,21 @@
           <hr>
           <h5 class="mt-4 mb-3"><i class="fa fa-route me-2"></i>Tahapan Penanganan</h5>
 
-          @foreach ($journeys as $journey)
-            <div class="card mb-3 shadow-sm">
+          @forelse ($journeys as $journey)
+            <div class="card border mb-3">
               <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                   <span class="badge bg-primary">{{ $journey->type }}</span>
                   <small class="text-muted">{{ optional($journey->created_at)->format('d M Y H:i') }}</small>
                 </div>
-
-                <p class="mb-3">{{ $journey->description }}</p>
+                <p class="mt-3 mb-2">{{ $journey->description }}</p>
 
                 @if ($journey->evidences->isNotEmpty())
-                  <div>
+                  <div class="mt-3">
                     <h6 class="fw-semibold mb-2">Bukti Pendukung</h6>
-                    <ul class="list-unstyled small">
+                    <ul class="list-unstyled mb-0">
                       @foreach ($journey->evidences as $evidence)
-                        <li>
+                        <li class="mb-1">
                           <a href="{{ $evidence->file_url }}" class="text-decoration-none" target="_blank" rel="noopener">
                             <i class="fa fa-paperclip me-2"></i>{{ basename($evidence->file_url) }}
                           </a>
@@ -55,15 +54,17 @@
                 @endif
               </div>
             </div>
-          @endforeach
+          @empty
+            <div class="alert alert-info p-2 mb-4">
+              Belum ada tahapan penanganan yang tercatat untuk laporan ini.
+            </div>
+          @endforelse
 
-          <!-- pagination -->
-          @if ($journeys->hasPages())
+          @if($journeys instanceof \Illuminate\Contracts\Pagination\Paginator && $journeys->hasPages())
             <div class="d-flex justify-content-center mt-4">
               {{ $journeys->links('pagination::bootstrap-5') }}
             </div>
           @endif
-
         </div>
       </div>
     </div>
@@ -101,11 +102,11 @@
 
             <div class="col-md-12 mb-3">
               <label class="form-label fw-semibold">Upload Bukti Pendukung</label>
-              <input 
-                type="file" 
-                name="files[]" 
-                class="form-control" 
-                multiple 
+              <input
+                type="file"
+                name="files[]"
+                class="form-control"
+                multiple
                 accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
               >
               <small class="text-muted">
@@ -125,4 +126,18 @@
     </div>
   </div>
 </div>
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (@json($errors->any())) {
+            var modalEl = document.getElementById('journeyModal');
+
+            if (modalEl && typeof bootstrap !== 'undefined') {
+                var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            }
+        }
+    });
+</script>
+@endsection
 @endsection

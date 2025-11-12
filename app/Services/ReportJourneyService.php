@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Interfaces\ReportJourneyRepositoryInterface;
 use App\Models\ReportEvidence;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class ReportJourneyService
 {
@@ -14,12 +16,18 @@ class ReportJourneyService
     ) {
     }
 
-    public function store(array $data, array $files = [])
+    public function store(array $data, array $files = []): array
     {
-        return DB::transaction(function () use ($data, $files) {
+        DB::beginTransaction();
+
+        try {
             $journey = $this->repository->store($data);
 
             foreach ($files as $file) {
+                if (! $file instanceof UploadedFile) {
+                    continue;
+                }
+
                 $storedPath = $file->store('evidences', 'public');
 
                 ReportEvidence::create([
@@ -30,7 +38,22 @@ class ReportJourneyService
                 ]);
             }
 
-            return $journey;
-        });
+            DB::commit();
+
+            return [
+                'status' => true,
+                'message' => 'Tahapan penanganan berhasil ditambahkan.',
+                'data' => $journey->load('evidences'),
+            ];
+        } catch (Throwable $throwable) {
+            DB::rollBack();
+
+            report($throwable);
+
+            return [
+                'status' => false,
+                'message' => 'Gagal menambahkan tahapan penanganan.',
+            ];
+        }
     }
 }

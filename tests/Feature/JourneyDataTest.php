@@ -82,7 +82,7 @@ class JourneyDataTest extends TestCase
             'files' => $files,
         ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('reports.show', $report->id));
         $response->assertSessionHas('success', 'Tahapan penanganan berhasil ditambahkan.');
 
         $this->assertDatabaseCount('report_journeys', 1);

@@ -10,11 +10,10 @@ class ReportController extends Controller
     {
         $report = Report::with('category')->findOrFail($id);
 
-        // ambil journeys pakai pagination
         $journeys = $report->journeys()
             ->with('evidences')
             ->orderByDesc('created_at')
-            ->paginate(5); // tampilkan 5 per halaman
+            ->paginate(5);
 
         return view('pages.reports.detail', compact('report', 'journeys'));
     }

@@ -7,7 +7,7 @@ use App\Models\ReportJourney;
 
 class ReportJourneyRepository implements ReportJourneyRepositoryInterface
 {
-    public function store(array $data)
+    public function store(array $data): ReportJourney
     {
         return ReportJourney::create($data);
     }
