@@ -19,7 +19,7 @@ class ReportController extends Controller
     {
         $report = Report::with('category')->findOrFail($id);
 
-        $journeys = $this->journeyService->paginateByReport($report->id, 5);
+        $journeys = $this->journeyService->paginateByReport($report->id, 5, order: 'desc');
 
         $institutions = Institution::orderBy('name')->get(['id', 'name']);
         $divisions = Division::orderBy('name')->get(['id', 'name', 'institution_id']);
@@ -32,6 +32,7 @@ class ReportController extends Controller
             'journeyTypes' => $journeyTypes,
             'institutions' => $institutions,
             'divisions' => $divisions,
+            'statusLabel' => ReportJourneyType::tryFrom($report->status)?->label() ?? $report->status,
         ]);
     }
 

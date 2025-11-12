@@ -54,20 +54,4 @@ class Report extends Model
             ]);
         });
     }
-
-    protected static function booted(): void
-    {
-        static::created(function (Report $report): void {
-            if ($report->journeys()->exists()) {
-                return;
-            }
-
-            $report->journeys()->create([
-                'type' => ReportJourneyType::SUBMITTED->value,
-                'description' => [
-                    'text' => 'Laporan diterima oleh sistem.',
-                ],
-            ]);
-        });
-    }
 }

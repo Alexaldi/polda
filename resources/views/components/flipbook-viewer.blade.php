@@ -49,6 +49,9 @@
                 if (window.jQuery && window.jQuery('#flipbookContainer').data('turn')) {
                     window.jQuery('#flipbookContainer').turn('destroy').removeClass('shadow');
                 }
+                if (flipbookContainer) {
+                    flipbookContainer.classList.remove('d-flex', 'flex-column', 'align-items-center', 'gap-3', 'p-3');
+                }
             }
 
             function openImagePreview(url) {
@@ -141,7 +144,7 @@
                     }
 
                     return Promise.all(renderTasks).then(function () {
-                        if (window.jQuery) {
+                        if (window.jQuery && typeof window.jQuery.fn.turn === 'function') {
                             const $container = window.jQuery('#flipbookContainer');
                             if ($container.data('turn')) {
                                 $container.turn('destroy');
@@ -157,6 +160,12 @@
                                 autoCenter: true,
                                 gradients: true,
                             });
+                        } else {
+                            flipbookContainer.classList.add('d-flex', 'flex-column', 'align-items-center', 'gap-3', 'p-3');
+                            const fallbackNotice = document.createElement('div');
+                            fallbackNotice.className = 'alert alert-info w-100 text-center';
+                            fallbackNotice.textContent = 'Mode flipbook tidak tersedia. Menampilkan halaman PDF secara berurutan.';
+                            flipbookContainer.prepend(fallbackNotice);
                         }
                     });
                 }).catch(function () {

@@ -6,6 +6,7 @@ use App\Enums\ReportJourneyType;
 use App\Services\ReportJourneyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -18,6 +19,8 @@ class ReportJourneyController extends Controller
 
     public function store(Request $request, int $reportId): RedirectResponse
     {
+        $limpahValues = [ReportJourneyType::TRANSFER->value, 'TRANSFER'];
+
         try {
             $validated = $request->validate([
                 'type' => [
@@ -26,18 +29,18 @@ class ReportJourneyController extends Controller
                 ],
                 'description' => ['required', 'string'],
                 'files' => ['nullable', 'array'],
-                'files.*' => ['nullable', 'file', 'max:4096'],
+                'files.*' => ['nullable', 'file', 'max:4096', 'mimes:jpg,jpeg,png,pdf,doc,docx'],
                 'institution_target_id' => [
                     'nullable',
                     'integer',
                     'exists:institutions,id',
-                    'required_if:type,' . ReportJourneyType::TRANSFER->value,
+                    Rule::requiredIf(fn () => in_array($request->input('type'), $limpahValues, true)),
                 ],
                 'division_target_id' => [
                     'nullable',
                     'integer',
                     'exists:divisions,id',
-                    'required_if:type,' . ReportJourneyType::TRANSFER->value,
+                    Rule::requiredIf(fn () => in_array($request->input('type'), $limpahValues, true)),
                 ],
             ]);
         } catch (ValidationException $exception) {
@@ -45,6 +48,11 @@ class ReportJourneyController extends Controller
                 ->withErrors($exception->errors())
                 ->withInput()
                 ->with('open_modal', 'journey');
+        }
+
+        if (! in_array($validated['type'], $limpahValues, true)) {
+            $validated['institution_target_id'] = null;
+            $validated['division_target_id'] = null;
         }
 
         $payload = [
@@ -59,8 +67,9 @@ class ReportJourneyController extends Controller
 
         $files = $request->file('files', []);
         $files = is_array($files) ? $files : [$files];
+        $files = array_filter($files, static fn ($file) => $file instanceof UploadedFile);
 
-        $result = $this->service->store($payload, array_filter($files));
+        $result = $this->service->store($payload, $files);
 
         if ($result['status'] ?? false) {
             return redirect()

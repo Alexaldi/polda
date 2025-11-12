@@ -25,6 +25,7 @@ use App\Http\Controllers\ReportController;
 */
 
 Auth::routes();
+
 Route::middleware(['auth'])->group(function () {
         // dashboard routes
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
@@ -49,7 +50,6 @@ Route::middleware(['auth'])->group(function () {
         //intitution routes
         Route::get('institutions/datatables', [InstitutionController::class, 'datatables'])->name('institutions.datatables');
         Route::resource('institutions', InstitutionController::class);
-        Route::resource('institutions', InstitutionController::class);
         
         //division and sub duvision routes
         Route::resource('unit', SubDivisionController::class)->names('subdivisions');
@@ -71,5 +71,5 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/reports/{report}/journeys', [ReportJourneyController::class, 'store'])
             ->name('reports.journeys.store');
 
-
-    });
+    }
+);
