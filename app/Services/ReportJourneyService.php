@@ -94,9 +94,7 @@ class ReportJourneyService
                 ]);
             }
 
-            if ($type !== ReportJourneyType::SUBMITTED) {
-                Report::whereKey($journey->report_id)->update(['status' => $type->value]);
-            }
+            Report::whereKey($journey->report_id)->update(['status' => $type->value]);
 
             DB::commit();
 

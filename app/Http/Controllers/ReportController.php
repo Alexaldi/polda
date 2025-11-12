@@ -17,12 +17,12 @@ class ReportController extends Controller
 
     public function show($id)
     {
-        $report = Report::with('category')->findOrFail($id);
+        $report = Report::with(['category', 'province', 'city', 'district'])->findOrFail($id);
 
         $journeys = $this->journeyService->paginateByReport($report->id, 5, order: 'desc');
 
         $institutions = Institution::orderBy('name')->get(['id', 'name']);
-        $divisions = Division::orderBy('name')->get(['id', 'name', 'type']);
+        $divisions = Division::orderBy('name')->get(['id', 'name', 'institution_id']);
 
         $journeyTypes = ReportJourneyType::manualOptions();
 

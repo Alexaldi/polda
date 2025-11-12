@@ -13,6 +13,15 @@
                 </div>
 
                 <div class="card-body">
+                    @php
+                        $incidentAt = $report->incident_datetime?->format('d M Y H:i');
+                        $finishedAt = $report->finish_time?->format('d M Y H:i');
+                        $categoryName = $report->category?->name;
+                        $provinceName = $report->province?->name;
+                        $cityName = $report->city?->name;
+                        $districtName = $report->district?->name;
+                    @endphp
+
                     <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
                         <div>
                             <h4 class="mb-2">{{ $report->title }}</h4>
@@ -22,17 +31,29 @@
                             </div>
                         </div>
                         <div class="text-md-end">
-                            <p class="mb-1"><strong>Kategori:</strong> {{ optional($report->category)->name ?? '-' }}</p>
+                            <p class="mb-1"><strong>Kategori:</strong> {{ $categoryName ?? '-' }}</p>
                             <p class="mb-0"><strong>Lokasi:</strong> {{ $report->address_detail ?? '-' }}</p>
                         </div>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <p class="mb-1"><strong>Waktu Kejadian:</strong> {{ optional($report->incident_datetime)->format('d M Y H:i') ?? '-' }}</p>
+                            <p class="mb-1"><strong>Status Database:</strong> {{ $report->status ?? '-' }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p class="mb-1"><strong>Waktu Selesai:</strong> {{ optional($report->finish_time)->format('d M Y H:i') ?? '-' }}</p>
+                            <p class="mb-1"><strong>Provinsi:</strong> {{ $provinceName ?? '-' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Waktu Kejadian:</strong> {{ $incidentAt ?? '-' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Kota/Kabupaten:</strong> {{ $cityName ?? '-' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Waktu Selesai:</strong> {{ $finishedAt ?? '-' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Kecamatan:</strong> {{ $districtName ?? '-' }}</p>
                         </div>
                     </div>
 

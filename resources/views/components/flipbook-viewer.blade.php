@@ -69,23 +69,13 @@
             }
 
             function openDocumentPreview(url) {
-                if (!fileViewerModalEl || !docWrapper) {
-                    return;
-                }
-
-                const source = resolveUrl(url);
-                resetFileViewer();
-                const iframe = document.createElement('iframe');
-                iframe.className = 'w-100 h-100 border-0 rounded';
-                iframe.setAttribute('allowfullscreen', 'true');
-                iframe.src = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(source);
-                docWrapper.appendChild(iframe);
-                docWrapper.classList.remove('d-none');
-
-                bootstrap.Modal.getOrCreateInstance(fileViewerModalEl).show();
+                openFallbackPreview(
+                    url,
+                    'Pratinjau belum didukung untuk dokumen ini. Silakan unduh untuk melihat detail lengkap.'
+                );
             }
 
-            function openFallbackPreview(url) {
+            function openFallbackPreview(url, message) {
                 if (!fileViewerModalEl || !fallbackWrapper) {
                     return;
                 }
@@ -93,8 +83,9 @@
                 const source = resolveUrl(url);
 
                 resetFileViewer();
+                const alertMessage = message || 'Pratinjau belum didukung untuk tipe file ini.';
                 fallbackWrapper.innerHTML = '' +
-                    '<div class="alert alert-info">Pratinjau belum didukung untuk tipe file ini.</div>' +
+                    '<div class="alert alert-info">' + alertMessage + '</div>' +
                     '<a href="' + source + '" target="_blank" rel="noopener" class="btn btn-primary">Unduh File</a>';
                 fallbackWrapper.classList.remove('d-none');
 
