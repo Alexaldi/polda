@@ -23,27 +23,28 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copy entire application code first
+# Copy application source first (prevents composer script errors that need app files)
 COPY . .
 
-# Pastikan folder storage dan bootstrap/cache ada
+# Install dependencies (production)
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+# Ensure writable permissions for storage and cache
 RUN mkdir -p storage bootstrap/cache \
-    && chmod -R 777 storage bootstrap/cache
-
-# Copy composer files first to cache dependency layer
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-reqs
-
-# Nginx
-FROM nginx:alpine
-COPY --from=app /var/www/html/public /var/www/html/public
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Set permission Laravel
-RUN chown -R www-data:www-data storage bootstrap/cache
-
-USER www-data
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 9000
 
 CMD ["php-fpm"]
+
+# -----------------------------
+# Nginx stage with bundled config
+# -----------------------------
+FROM nginx:alpine AS nginx
+
+# Copy only public assets into nginx image
+COPY --from=app /var/www/html/public /var/www/html/public
+
+# Bundle nginx configuration
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
