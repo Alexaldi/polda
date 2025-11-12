@@ -196,6 +196,7 @@
 @endsection
 
 @section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/pdfobject@2.2.8/pdfobject.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         let openModal = @json(session('open_modal'));
@@ -272,3 +273,4 @@
     });
 </script>
 @endsection
+    
