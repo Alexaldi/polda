@@ -36,25 +36,23 @@
                         </div>
                     </div>
 
+                    @php
+                        $metadata = [
+                            ['label' => 'Status (Database)', 'value' => $report->status ?? '-'],
+                            ['label' => 'Provinsi', 'value' => $provinceName ?? '-'],
+                            ['label' => 'Waktu Kejadian', 'value' => $incidentAt ?? '-'],
+                            ['label' => 'Kota/Kabupaten', 'value' => $cityName ?? '-'],
+                            ['label' => 'Waktu Selesai', 'value' => $finishedAt ?? '-'],
+                            ['label' => 'Kecamatan', 'value' => $districtName ?? '-'],
+                        ];
+                    @endphp
+
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Status Database:</strong> {{ $report->status ?? '-' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Provinsi:</strong> {{ $provinceName ?? '-' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Waktu Kejadian:</strong> {{ $incidentAt ?? '-' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Kota/Kabupaten:</strong> {{ $cityName ?? '-' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Waktu Selesai:</strong> {{ $finishedAt ?? '-' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Kecamatan:</strong> {{ $districtName ?? '-' }}</p>
-                        </div>
+                        @foreach($metadata as $item)
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>{{ $item['label'] }}:</strong> {{ $item['value'] }}</p>
+                            </div>
+                        @endforeach
                     </div>
 
                     <div class="mt-3">

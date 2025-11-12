@@ -71,7 +71,7 @@
             function openDocumentPreview(url) {
                 openFallbackPreview(
                     url,
-                    'Pratinjau belum didukung untuk dokumen ini. Silakan unduh untuk melihat detail lengkap.'
+                    'Pratinjau dokumen Word belum didukung di aplikasi ini. Gunakan tombol di bawah untuk mengunduh dan membuka file.'
                 );
             }
 

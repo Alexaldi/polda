@@ -94,7 +94,13 @@ class ReportJourneyService
                 ]);
             }
 
-            Report::whereKey($journey->report_id)->update(['status' => $type->value]);
+            $reportUpdate = ['status' => $type->value];
+
+            if ($type === ReportJourneyType::SELESAI) {
+                $reportUpdate['finish_time'] = now();
+            }
+
+            Report::whereKey($journey->report_id)->update($reportUpdate);
 
             DB::commit();
 
