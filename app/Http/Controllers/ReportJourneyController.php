@@ -2,47 +2,49 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ReportJourneyService;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Services\ReportJourneyService;
 
 class ReportJourneyController extends Controller
 {
-    public function __construct(
-        protected ReportJourneyService $service
-    ) {
+    protected $service;
+
+    public function __construct(ReportJourneyService $service)
+    {
+        $this->service = $service;
     }
 
-    public function store(Request $request, $reportId): RedirectResponse
+    public function store(Request $request, $reportId)
     {
-        $validated = $request->validate([
+        $request->validate([
             'type' => 'required|in:PEMERIKSAAN,LIMPAH,SIDANG,SELESAI',
             'description' => 'required|string',
             'files.*' => 'nullable|file|max:4096',
         ]);
 
         $payload = [
-            'report_id' => $reportId,
+            'report_id'      => $reportId,
             'institution_id' => optional(auth()->user())->institution_id,
-            'division_id' => optional(auth()->user())->division_id,
-            'type' => $validated['type'],
-            'description' => $validated['description'],
+            'division_id'    => optional(auth()->user())->division_id,
+            'type'           => $request->type,
+            'description'    => $request->description,
         ];
 
         $files = $request->file('files') ?? [];
-
-        if (! is_array($files)) {
+        if (!is_array($files)) {
             $files = [$files];
         }
 
-        try {
-            $this->service->store($payload, array_filter($files));
-        } catch (\Throwable $exception) {
-            report($exception);
+        $result = $this->service->store($payload, array_filter($files));
 
-            return back()->with('error', 'Gagal menambahkan tahapan penanganan.')->withInput();
+        if ($result['status']) {
+            return redirect()
+                ->route('reports.show', ['id' => $reportId, 'page' => 1])
+                ->with('success', $result['message']);
         }
 
-        return back()->with('success', 'Tahapan penanganan berhasil ditambahkan.');
+        return back()
+            ->with('error', $result['message'])
+            ->withInput();
     }
 }
