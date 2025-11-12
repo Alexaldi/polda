@@ -37,37 +37,6 @@
                             {{ $journeys->links('pagination::bootstrap-5') }}
                         </div>
                     @endif
-
-                    <hr class="my-5">
-
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0"><i class="fa fa-sticky-note me-2"></i>Catatan Tindak Lanjut</h5>
-                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#followUpModal">
-                            <i class="fa fa-plus me-1"></i> Tambah Catatan
-                        </button>
-                    </div>
-
-                    @forelse($followUps as $followUp)
-                        <div class="card border mb-3">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                                    <span class="fw-semibold">{{ optional($followUp->user)->name ?? 'Petugas' }}</span>
-                                    <small class="text-muted">{{ optional($followUp->created_at)->format('d M Y H:i') }}</small>
-                                </div>
-                                <p class="mt-3 mb-0">{{ $followUp->notes }}</p>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="alert alert-info p-2 mb-0">
-                            Belum ada catatan tindak lanjut untuk laporan ini.
-                        </div>
-                    @endforelse
-
-                    @if($followUps->hasPages())
-                        <div class="d-flex justify-content-center mt-4">
-                            {{ $followUps->links('pagination::bootstrap-5') }}
-                        </div>
-                    @endif
                 </div>
             </div>
         </div>
@@ -163,157 +132,51 @@
     </div>
 </div>
 
-{{-- Follow Up Modal --}}
-<div class="modal fade" id="followUpModal" tabindex="-1" aria-labelledby="followUpModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="followUpModalLabel">Tambah Catatan Tindak Lanjut</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <form action="{{ route('reports.followups.store', $report->id) }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <label class="form-label fw-semibold" for="followup-notes">Catatan</label>
-                    <textarea
-                        name="notes"
-                        id="followup-notes"
-                        rows="4"
-                        class="form-control"
-                        placeholder="Tuliskan tindak lanjut internal..."
-                        required
-                    >{{ old('notes') }}</textarea>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-save me-1"></i> Simpan Catatan
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 @include('components.file-viewer')
 @endsection
 
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/pdfobject@2.2.8/pdfobject.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var openModal = @json(session('open_modal'));
-        var hasErrors = @json($errors->any());
-        var journeyModalEl = document.getElementById('journeyModal');
-        var followUpModalEl = document.getElementById('followUpModal');
+document.addEventListener('DOMContentLoaded', function () {
+    const typeSelect = document.getElementById('journey-type');
+    const institutionField = document.getElementById('limpah-institution-field');
+    const divisionField = document.getElementById('limpah-division-field');
+    const divisionSelect = document.getElementById('division-target');
+    const institutionSelect = document.getElementById('institution-target');
+    const limpahValue = 'LIMPAH';
 
-        if (!openModal && hasErrors) {
-            openModal = 'journey';
-        }
-
-        if (openModal) {
-            var targetModal = openModal === 'followup' ? followUpModalEl : journeyModalEl;
-            if (targetModal) {
-                bootstrap.Modal.getOrCreateInstance(targetModal).show();
-            }
-        }
-
-        var typeSelect = document.getElementById('journey-type');
-        var institutionField = document.getElementById('limpah-institution-field');
-        var divisionField = document.getElementById('limpah-division-field');
-        var divisionSelect = document.getElementById('division-target');
-        var institutionSelect = document.getElementById('institution-target');
-        var limpahValue = '{{ \App\Enums\ReportJourneyType::TRANSFER->value }}';
-
-        var toggleLimpahFields = function () {
-            var isLimpah = typeSelect && typeSelect.value === limpahValue;
-            [institutionField, divisionField].forEach(function (field) {
-                if (!field) { return; }
-                field.hidden = !isLimpah;
-                Array.prototype.forEach.call(field.querySelectorAll('select'), function (select) {
-                    select.required = isLimpah;
-                });
-            });
-            if (!isLimpah && divisionSelect) {
-                divisionSelect.value = '';
-            }
-        };
-
-        var filterDivisions = function () {
-            if (!divisionSelect || !institutionSelect) {
-                return;
-            }
-
-            var selectedInstitution = institutionSelect.value;
-            Array.prototype.forEach.call(divisionSelect.options, function (option) {
-                if (!option.dataset.institution) {
-                    option.hidden = false;
-                    return;
-                }
-
-                option.hidden = selectedInstitution && option.dataset.institution !== selectedInstitution;
-            });
-
-            if (divisionSelect.selectedOptions.length && divisionSelect.selectedOptions[0].hidden) {
-                divisionSelect.value = '';
-            }
-        };
-
-        if (typeSelect) {
-            typeSelect.addEventListener('change', function () {
-                toggleLimpahFields();
-                filterDivisions();
-            });
-        }
-
-        if (institutionSelect) {
-            institutionSelect.addEventListener('change', filterDivisions);
-        }
-
-        toggleLimpahFields();
-        filterDivisions();
-
-        var viewerModalEl = document.getElementById('fileViewerModal');
-        var pdfContainer = viewerModalEl ? viewerModalEl.querySelector('[data-viewer-target]') : null;
-        var imageContainer = viewerModalEl ? viewerModalEl.querySelector('[data-viewer-image]') : null;
-
-        document.querySelectorAll('.btn-preview-file').forEach(function (button) {
-            button.addEventListener('click', function (event) {
-                event.preventDefault();
-                if (!viewerModalEl || (!pdfContainer && !imageContainer)) {
-                    return;
-                }
-
-                var fileUrl = button.getAttribute('data-file-url');
-                var fileType = (button.getAttribute('data-file-type') || '').toLowerCase();
-
-                if (pdfContainer) {
-                    pdfContainer.classList.add('d-none');
-                    pdfContainer.innerHTML = '';
-                }
-
-                if (imageContainer) {
-                    imageContainer.classList.add('d-none');
-                    imageContainer.innerHTML = '';
-                }
-
-                if (fileType === 'pdf' && pdfContainer) {
-                    PDFObject.embed(fileUrl, pdfContainer, { height: '520px' });
-                    pdfContainer.classList.remove('d-none');
-                } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileType) && imageContainer) {
-                    imageContainer.innerHTML = '<img src="' + fileUrl + '" alt="Evidence" class="img-fluid rounded">';
-                    imageContainer.classList.remove('d-none');
-                } else if (imageContainer) {
-                    imageContainer.innerHTML = '<div class="alert alert-info">Pratinjau tidak tersedia untuk tipe file ini. Silakan unduh untuk melihat detail.</div>' +
-                        '<a href="' + fileUrl + '" target="_blank" rel="noopener" class="btn btn-primary">Unduh File</a>';
-                    imageContainer.classList.remove('d-none');
-                }
-
-                bootstrap.Modal.getOrCreateInstance(viewerModalEl).show();
+    const toggleLimpahFields = () => {
+        const isLimpah = typeSelect && typeSelect.value === limpahValue;
+        [institutionField, divisionField].forEach(field => {
+            if (!field) return;
+            field.hidden = !isLimpah;
+            field.querySelectorAll('select').forEach(select => {
+                select.required = isLimpah;
             });
         });
+        if (!isLimpah && divisionSelect) divisionSelect.value = '';
+    };
+
+    const filterDivisions = () => {
+        if (!divisionSelect || !institutionSelect) return;
+        const selectedInstitution = institutionSelect.value;
+        divisionSelect.querySelectorAll('option').forEach(opt => {
+            if (!opt.dataset.institution) return (opt.hidden = false);
+            opt.hidden = selectedInstitution && opt.dataset.institution !== selectedInstitution;
+        });
+    };
+
+    if (typeSelect) typeSelect.addEventListener('change', () => {
+        toggleLimpahFields();
+        filterDivisions();
     });
+
+    if (institutionSelect) institutionSelect.addEventListener('change', filterDivisions);
+
+    toggleLimpahFields();
+    filterDivisions();
+});
 </script>
 @endsection
+    
