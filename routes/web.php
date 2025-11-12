@@ -3,9 +3,14 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubDivisionController;
+use App\Http\Controllers\PelaporanController;
+use App\Http\Controllers\DivisionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,10 +28,13 @@ Route::middleware(['auth'])->group(
     function () {
         // dashboard routes
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
+
         // users routes
         Route::resource('users', UserController::class);
         Route::get('datatables/users', [UserController::class, 'datatables'])->name('datatables.users');
+
         // permission routes
+        Route::get('datatables/permissions', [PermissionController::class, 'datatables'])->name('datatables.permissions');
         Route::resource('permissions', PermissionController::class);
         // profile routes
         Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
@@ -37,5 +45,30 @@ Route::middleware(['auth'])->group(
         Route::get('profile/photo/{path}', [ProfileController::class, 'photo'])
             ->where('path', '.*')
             ->name('profile.photo.show');
+
+        //intitution routes
+        Route::get('institutions/datatables', [InstitutionController::class, 'datatables'])->name('institutions.datatables');
+        Route::resource('institutions',InstitutionController::class);
+        
+        //division and sub duvision routes
+        Route::get('subdivisions/datatables', [SubDivisionController::class, 'datatables'])
+            ->name('subdivisions.datatables');
+        Route::resource('subdivisions', SubDivisionController::class)->except('show');
+
+        // role routes
+        Route::resource('roles', RoleController::class);
+        Route::get('datatables/roles', [RoleController::class, 'datatables'])->name('datatables.roles');
+
+        // Ubah resource route
+        Route::resource('sub-bagian', DivisionController::class)->names('divisions');
+        Route::get('datatables/sub-bagian', [DivisionController::class, 'datatables'])
+            ->name('datatables.division');
+
+        //pelaporan route
+        Route::resource('pelaporan', PelaporanController::class);
+        Route::get('datatables/pelaporan', [PelaporanController::class, 'datatables'])->name('datatables.pelaporan');
+        Route::get('get-cities/{provinceId}', [PelaporanController::class, 'getCitiesByProvince']);
+        Route::get('get-districts/{cityId}', [PelaporanController::class, 'getDistrictsByCity']);
+    
     }
 );
