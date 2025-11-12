@@ -7,6 +7,10 @@
 
 <div class="position-relative">
     @forelse($collection as $item)
+        @php
+            $targetInstitution = $item->target_institution ?? null;
+            $targetDivision = $item->target_division ?? null;
+        @endphp
         <div class="d-flex align-items-start position-relative pb-4">
             <div class="d-flex flex-column align-items-center me-3">
                 <span class="badge {{ $item->badge_class ?? 'bg-secondary' }} text-uppercase">{{ $item->type_label ?? $item->type }}</span>
@@ -17,15 +21,15 @@
                     <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-primary border border-white p-2"></span>
                     <div class="ms-4">
                         <p class="mb-2">{!! nl2br(e($item->description)) !!}</p>
-                        @if(!empty($item->target_institution) || !empty($item->target_division))
+                        @if($targetInstitution || $targetDivision)
                             <div class="mb-2">
                                 <span class="badge bg-light text-dark text-uppercase">Limpah</span>
                                 <div class="small text-muted mt-1">
-                                    @if(!empty($item->target_institution))
-                                        {{ $item->target_institution->name }}
+                                    @if($targetInstitution)
+                                        {{ $targetInstitution->name }}
                                     @endif
-                                    @if(!empty($item->target_division))
-                                        <span class="d-block">Divisi: {{ $item->target_division->name }}</span>
+                                    @if($targetDivision)
+                                        <span class="d-block">Divisi: {{ $targetDivision->name }}</span>
                                     @endif
                                 </div>
                             </div>

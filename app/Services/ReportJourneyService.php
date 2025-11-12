@@ -22,9 +22,9 @@ class ReportJourneyService
     ) {
     }
 
-    public function paginateByReport(int $reportId, int $perPage = 5): LengthAwarePaginator
+    public function paginateByReport(int $reportId, int $perPage = 5, string $order = 'desc'): LengthAwarePaginator
     {
-        $paginator = $this->repository->paginateByReport($reportId, $perPage);
+        $paginator = $this->repository->paginateByReport($reportId, $perPage, $order);
 
         $journeys = $paginator->getCollection();
 
@@ -44,8 +44,12 @@ class ReportJourneyService
         $divisions = Division::whereIn('id', $divisionIds)->get()->keyBy('id');
 
         $journeys->transform(static function (ReportJourney $journey) use ($institutions, $divisions): ReportJourney {
-            $journey->target_institution = $institutions->get($journey->target_institution_id);
-            $journey->target_division = $divisions->get($journey->target_division_id);
+            $journey->target_institution = $journey->target_institution_id
+                ? $institutions->get($journey->target_institution_id)
+                : null;
+            $journey->target_division = $journey->target_division_id
+                ? $divisions->get($journey->target_division_id)
+                : null;
 
             return $journey;
         });

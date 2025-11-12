@@ -13,25 +13,39 @@
                 </div>
 
                 <div class="card-body">
-                    <h4 class="mb-3">{{ $report->title }}</h4>
-                    @php($statusLabel = \App\Enums\ReportJourneyType::tryFrom($report->status)?->label() ?? $report->status)
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Status Laporan:</strong> {{ $statusLabel }}</p>
-                            <p class="mb-1"><strong>Waktu Kejadian:</strong> {{ optional($report->incident_datetime)->format('d M Y H:i') ?? '-' }}</p>
+                    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+                        <div>
+                            <h4 class="mb-2">{{ $report->title }}</h4>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="badge bg-light text-dark">Kode: {{ $report->code ?? '-' }}</span>
+                                <span class="badge bg-secondary text-uppercase">Status: {{ $statusLabel ?? '-' }}</span>
+                            </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="text-md-end">
                             <p class="mb-1"><strong>Kategori:</strong> {{ optional($report->category)->name ?? '-' }}</p>
-                            <p class="mb-1"><strong>Lokasi:</strong> {{ $report->address_detail ?? '-' }}</p>
+                            <p class="mb-0"><strong>Lokasi:</strong> {{ $report->address_detail ?? '-' }}</p>
                         </div>
                     </div>
 
-                    <p class="mt-3">{{ $report->description }}</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Waktu Kejadian:</strong> {{ optional($report->incident_datetime)->format('d M Y H:i') ?? '-' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Waktu Selesai:</strong> {{ optional($report->finish_time)->format('d M Y H:i') ?? '-' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <h6 class="fw-semibold mb-2">Deskripsi Laporan</h6>
+                        <p class="mb-0">{!! nl2br(e($report->description)) !!}</p>
+                    </div>
 
                     <hr>
                     <h5 class="mt-4 mb-3"><i class="fa fa-route me-2"></i>Timeline Penanganan</h5>
 
                     @include('components.timeline', ['items' => $journeys])
+
                 </div>
             </div>
         </div>
@@ -78,7 +92,11 @@
                             <select name="division_target_id" id="division-target" class="form-select">
                                 <option value="">-- Pilih Divisi --</option>
                                 @foreach($divisions as $division)
-                                    <option value="{{ $division->id }}" data-institution="{{ $division->institution_id }}" @selected((int) old('division_target_id') === $division->id)>
+                                    <option
+                                        value="{{ $division->id }}"
+                                        data-institution="{{ $division->institution_id }}"
+                                        @selected((int) old('division_target_id') === $division->id)
+                                    >
                                         {{ $division->name }}
                                     </option>
                                 @endforeach
@@ -87,12 +105,26 @@
 
                         <div class="col-12">
                             <label class="form-label fw-semibold" for="journey-description">Deskripsi Proses</label>
-                            <textarea name="description" id="journey-description" rows="3" class="form-control" placeholder="Tuliskan ringkasan tahapan penanganan..." required>{{ old('description') }}</textarea>
+                            <textarea
+                                name="description"
+                                id="journey-description"
+                                rows="3"
+                                class="form-control"
+                                placeholder="Tuliskan ringkasan tahapan penanganan..."
+                                required
+                            >{{ old('description') }}</textarea>
                         </div>
 
                         <div class="col-12">
                             <label class="form-label fw-semibold" for="journey-files">Upload Bukti Pendukung</label>
-                            <input type="file" name="files[]" id="journey-files" class="form-control" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                            <input
+                                type="file"
+                                name="files[]"
+                                id="journey-files"
+                                class="form-control"
+                                multiple
+                                accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                            >
                             <small class="text-muted">*Bisa unggah lebih dari satu file (foto, dokumen, atau bukti lainnya).</small>
                         </div>
                     </div>
@@ -114,6 +146,7 @@
 @endsection
 
 @section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/pdfobject@2.2.8/pdfobject.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         let openModal = @json(session('open_modal'));
@@ -133,42 +166,63 @@
         const divisionField = document.getElementById('limpah-division-field');
         const divisionSelect = document.getElementById('division-target');
         const institutionSelect = document.getElementById('institution-target');
-        const limpahValue = '{{ \App\Enums\ReportJourneyType::TRANSFER->value }}';
+        const limpahValues = ['{{ \App\Enums\ReportJourneyType::TRANSFER->value }}', 'TRANSFER'];
 
-        const toggleLimpahFields = () => {
-            const isLimpah = typeSelect && typeSelect.value === limpahValue;
-            [institutionField, divisionField].forEach((field) => {
-                if (!field) return;
+        const toggleLimpahFields = function () {
+            const selectedType = typeSelect ? typeSelect.value : '';
+            const isLimpah = limpahValues.includes(selectedType);
+            [institutionField, divisionField].forEach(function (field) {
+                if (!field) { return; }
                 field.hidden = !isLimpah;
-                field.querySelectorAll('select').forEach((select) => {
+                Array.prototype.forEach.call(field.querySelectorAll('select'), function (select) {
                     select.required = isLimpah;
                 });
             });
-            if (!isLimpah && divisionSelect) {
-                divisionSelect.value = '';
+            if (!isLimpah) {
+                if (institutionSelect) {
+                    institutionSelect.value = '';
+                }
+                if (divisionSelect) {
+                    divisionSelect.value = '';
+                }
             }
         };
 
-        const filterDivisions = () => {
-            if (!divisionSelect || !institutionSelect) return;
+        const filterDivisions = function () {
+            if (!divisionSelect || !institutionSelect) {
+                return;
+            }
+
             const selectedInstitution = institutionSelect.value;
-            divisionSelect.querySelectorAll('option').forEach((option) => {
-                option.hidden = !!selectedInstitution && option.dataset.institution !== selectedInstitution;
+            Array.prototype.forEach.call(divisionSelect.options, function (option) {
+                if (!option.dataset.institution) {
+                    option.hidden = false;
+                    return;
+                }
+
+                option.hidden = selectedInstitution && option.dataset.institution !== selectedInstitution;
             });
+
             if (divisionSelect.selectedOptions.length && divisionSelect.selectedOptions[0].hidden) {
                 divisionSelect.value = '';
             }
         };
 
-        if (typeSelect) typeSelect.addEventListener('change', () => {
-            toggleLimpahFields();
-            filterDivisions();
-        });
+        if (typeSelect) {
+            typeSelect.addEventListener('change', function () {
+                toggleLimpahFields();
+                filterDivisions();
+            });
+        }
 
-        if (institutionSelect) institutionSelect.addEventListener('change', filterDivisions);
+        if (institutionSelect) {
+            institutionSelect.addEventListener('change', filterDivisions);
+        }
 
         toggleLimpahFields();
         filterDivisions();
+
     });
 </script>
 @endsection
+    

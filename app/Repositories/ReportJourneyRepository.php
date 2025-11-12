@@ -13,11 +13,13 @@ class ReportJourneyRepository implements ReportJourneyRepositoryInterface
         return ReportJourney::create($data);
     }
 
-    public function paginateByReport(int $reportId, int $perPage = 5): LengthAwarePaginator
+    public function paginateByReport(int $reportId, int $perPage = 5, string $order = 'desc'): LengthAwarePaginator
     {
+        $direction = strtolower($order) === 'asc' ? 'asc' : 'desc';
+
         return ReportJourney::with('evidences')
             ->where('report_id', $reportId)
-            ->orderBy('created_at')
+            ->orderBy('created_at', $direction)
             ->paginate($perPage);
     }
 }

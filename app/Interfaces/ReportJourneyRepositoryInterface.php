@@ -9,5 +9,5 @@ interface ReportJourneyRepositoryInterface
 {
     public function store(array $data): ReportJourney;
 
-    public function paginateByReport(int $reportId, int $perPage = 5): LengthAwarePaginator;
+    public function paginateByReport(int $reportId, int $perPage = 5, string $order = 'desc'): LengthAwarePaginator;
 }
