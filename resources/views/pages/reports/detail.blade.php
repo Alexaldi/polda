@@ -118,7 +118,7 @@
                                     @endphp
                                     <option
                                         value="{{ $division->id }}"
-                                        data-institution="{{ $institutionKey }}"
+                                        data-institution="{{ $institutionKey ?? '' }}"
                                         data-parent="{{ $division->parent_id }}"
                                         @selected((int) old('subdivision_target_id') === $division->id)
                                     >
@@ -258,8 +258,10 @@
                 }
                 if (divisionSelect) {
                     divisionSelect.value = '';
+                    divisionSelect.disabled = true;
                 }
             }
+            updateSubdivisionState();
         };
 
         const filterDivisions = function () {
@@ -280,6 +282,21 @@
             if (divisionSelect.selectedOptions.length && divisionSelect.selectedOptions[0].hidden) {
                 divisionSelect.value = '';
             }
+
+            updateSubdivisionState();
+        };
+
+        const updateSubdivisionState = function () {
+            if (!divisionSelect) {
+                return;
+            }
+
+            const isLimpah = typeSelect && limpahValues.includes(typeSelect.value);
+            const hasInstitution = institutionSelect && institutionSelect.value;
+            const shouldEnable = isLimpah && hasInstitution;
+
+            divisionSelect.disabled = !shouldEnable;
+            divisionSelect.classList.toggle('bg-body-tertiary', !shouldEnable);
         };
 
         if (typeSelect) {
@@ -295,6 +312,7 @@
 
         toggleLimpahFields();
         filterDivisions();
+        updateSubdivisionState();
 
     });
 </script>

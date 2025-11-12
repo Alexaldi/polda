@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ReportJourneyType;
+use App\Models\Division;
 use App\Services\ReportJourneyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,6 +51,29 @@ class ReportJourneyController extends Controller
                     Rule::requiredIf(fn () => in_array($request->input('type'), $limpahValues, true)),
                 ],
             ]);
+
+            if (
+                in_array($validated['type'], $limpahValues, true)
+                && ($validated['subdivision_target_id'] ?? null)
+                && ($validated['institution_target_id'] ?? null)
+            ) {
+                $isValidSubdivision = Division::query()
+                    ->whereKey($validated['subdivision_target_id'])
+                    ->whereNotNull('parent_id')
+                    ->where(function ($query) use ($validated) {
+                        $query->where('institution_id', $validated['institution_target_id'])
+                            ->orWhereHas('parent', static function ($parentQuery) use ($validated) {
+                                $parentQuery->where('institution_id', $validated['institution_target_id']);
+                            });
+                    })
+                    ->exists();
+
+                if (! $isValidSubdivision) {
+                    throw ValidationException::withMessages([
+                        'subdivision_target_id' => 'Unit/Sub-bagian tidak sesuai dengan institusi yang dipilih.',
+                    ]);
+                }
+            }
         } catch (ValidationException $exception) {
             return back()
                 ->withErrors($exception->errors())

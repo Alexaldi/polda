@@ -77,17 +77,24 @@
             object-fit: contain;
         }
 
+        #fileViewerModal .viewer-pdf iframe {
+            min-height: 70vh;
+            background-color: var(--bs-body-bg);
+        }
+
         #fileViewerModal .viewer-docx {
             max-height: 70vh;
             overflow-y: auto;
             padding: 1rem;
             border-radius: 0.75rem;
-            background-color: rgba(15, 23, 42, 0.05);
+            background-color: var(--bs-body-bg);
+            border: 1px solid rgba(148, 163, 184, 0.15);
         }
 
         body.dark-version #fileViewerModal .viewer-docx,
         body[data-bs-theme="dark"] #fileViewerModal .viewer-docx {
-            background-color: rgba(15, 23, 42, 0.45);
+            background-color: rgba(15, 23, 42, 0.78);
+            border-color: rgba(148, 163, 184, 0.35);
             color: #f1f5f9;
         }
 
@@ -107,13 +114,14 @@
             margin: 0 auto;
             background-color: #ffffff;
             padding: 2rem;
-            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.1);
         }
 
         body.dark-version #fileViewerModal .docx-scroll .docx-wrapper,
         body[data-bs-theme="dark"] #fileViewerModal .docx-scroll .docx-wrapper {
             background-color: #1f2937;
             color: #f8fafc;
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.6);
         }
     </style>
 @endonce
@@ -146,6 +154,25 @@
             const DOCX_SCRIPT_SRC = 'https://cdn.jsdelivr.net/npm/docx-preview@0.3.1/dist/docx-preview.min.js';
             const DOCX_STYLE_HREF = 'https://cdn.jsdelivr.net/npm/docx-preview@0.3.1/dist/docx-preview.min.css';
             const JSZIP_SCRIPT_SRC = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+            const DOCX_FALLBACK_STYLE = `
+                .docx-wrapper {
+                    max-width: 900px;
+                }
+
+                .docx-wrapper * {
+                    color: inherit !important;
+                }
+
+                .docx-wrapper table {
+                    width: 100% !important;
+                }
+
+                .docx-wrapper p {
+                    margin-bottom: 0.75rem !important;
+                    line-height: 1.6;
+                }
+            `;
+            let docxStyleInjected = false;
 
             function hideContent() {
                 [imageWrapper, pdfWrapper, docxWrapper, messageWrapper].forEach(function (element) {
@@ -178,6 +205,7 @@
             function showMessage(message, type = 'info') {
                 stopLoading();
                 hideContent();
+                setStatus('');
                 if (!messageWrapper) {
                     return;
                 }
@@ -214,6 +242,7 @@
                     script = document.createElement('script');
                     script.src = src;
                     script.async = true;
+                    script.crossOrigin = 'anonymous';
                     script.setAttribute('data-dynamic-src', src);
                     script.addEventListener('load', function () {
                         script.setAttribute('data-loaded', 'true');
@@ -243,6 +272,8 @@
                     link = document.createElement('link');
                     link.rel = 'stylesheet';
                     link.href = href;
+                    link.crossOrigin = 'anonymous';
+                    link.referrerPolicy = 'no-referrer';
                     link.setAttribute('data-dynamic-href', href);
                     link.addEventListener('load', function () {
                         link.setAttribute('data-loaded', 'true');
@@ -280,7 +311,7 @@
 
             function openPdf(url) {
                 startLoading('Memuat dokumen PDF...');
-                setStatus('Menyiapkan viewer PDF.js');
+                setStatus('Menyiapkan viewer PDF.js (tampilan dokumen)');
                 pdfIframe.src = 'about:blank';
 
                 fetchBlob(url)
@@ -319,16 +350,28 @@
                 imageEl.src = url;
             }
 
+            function ensureDocxAssets() {
+                return ensureScript(JSZIP_SCRIPT_SRC)
+                    .then(function () { return ensureScript(DOCX_SCRIPT_SRC); })
+                    .then(function () {
+                        return ensureStylesheet(DOCX_STYLE_HREF).catch(function () {
+                            if (!docxStyleInjected) {
+                                const style = document.createElement('style');
+                                style.textContent = DOCX_FALLBACK_STYLE;
+                                style.setAttribute('data-docx-fallback', 'true');
+                                document.head.appendChild(style);
+                                docxStyleInjected = true;
+                            }
+                        });
+                    });
+            }
+
             function openDocx(url) {
                 startLoading('Memuat dokumen Word...');
-                setStatus('Menyiapkan docx-preview');
+                setStatus('Menyiapkan docx-preview (tampilan dokumen)');
                 docxContainer.innerHTML = '';
 
-                Promise.all([
-                    ensureStylesheet(DOCX_STYLE_HREF),
-                    ensureScript(JSZIP_SCRIPT_SRC),
-                    ensureScript(DOCX_SCRIPT_SRC),
-                ])
+                ensureDocxAssets()
                     .then(function () {
                         if (!window.docx || typeof window.docx.renderAsync !== 'function') {
                             throw new Error('docx-preview tidak tersedia.');
@@ -377,7 +420,13 @@
                     return;
                 }
 
-                const extension = (type || url.split('.').pop() || '').toLowerCase();
+                let extension = (type || '').toLowerCase();
+                if (extension.includes('/')) {
+                    extension = extension.split('/').pop();
+                }
+                if (!extension) {
+                    extension = (url.split('?')[0].split('.').pop() || '').toLowerCase();
+                }
                 const safeFileName = fileName || getFileNameFromUrl(url);
 
                 if (downloadButton) {
