@@ -18,9 +18,9 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-xl-3 col-sm-6">
-                                <label class="form-label">Cari Unit</label>
+                                <label class="form-label">Search</label>
                                 <input type="text" class="form-control mb-xl-0 mb-3"
-                                       id="filter_q" placeholder="Cari nama Unit">
+                                       id="filter_q" placeholder="Search by Title">
                             </div>
                             <div class="col-xl-3 col-sm-6 align-self-end">
                                 <div>
@@ -28,7 +28,7 @@
                                         <i class="fa fa-filter me-1"></i>Filter
                                     </button>
                                     <button id="btnClear" class="btn btn-danger light" type="button">
-                                        Reset
+                                        Remove Filter
                                     </button>
                                 </div>
                             </div>
@@ -37,38 +37,40 @@
                 </div>
             </div>
 
-            <!-- Tambah Unit -->
+            <!-- Tambah Laporan -->
             <div class="mb-3">
-                <a href="{{ route('subdivisions.create') }}" class="btn btn-primary btn-sm">Tambah Unit</a>
+                <a href="{{ route('pelaporan.create') }}" class="btn btn-primary btn-sm">
+                    <i class="fa fa-plus me-1"></i>Tambah Laporan
+                </a>
             </div>
 
             <!-- DataTables -->
             <div class="filter cm-content-box box-primary">
                 <div class="content-title SlideToolHeader">
-                    <div class="cpa"><i class="fa-solid fa-file-lines me-1"></i>Daftar Unit</div>
+                    <div class="cpa"><i class="fa-solid fa-file-lines me-1"></i>Laporan List</div>
                 </div>
 
                 <div class="cm-content-body form excerpt">
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table id="subdivisions-table" class="display min-w850">
+                            <table id="pelaporan-table" class="display min-w850">
                                 <thead>
                                     <tr>
                                         <th>No</th>
-                                        <th>Nama Unit</th>
-                                        <th>Divisi Induk</th>
-                                        <th>Jenis</th>
-                                        <th>Aksi</th>
+                                        <th>Judul Laporan</th>
+                                        <th>Tanggal Kejadian</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
                                 <tfoot>
                                     <tr>
                                         <th>No</th>
-                                        <th>Nama Unit</th>
-                                        <th>Divisi Induk</th>
-                                        <th>Jenis</th>
-                                        <th>Aksi</th>
+                                        <th>Judul Laporan</th>
+                                        <th>Tanggal Kejadian</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -85,33 +87,38 @@
 @section('scripts')
 <script>
 jQuery(function($) {
-    var table = $('#subdivisions-table').DataTable({
+    var table = $('#pelaporan-table').DataTable({
         processing: true,
         serverSide: true,
         ajax: {
-            url: '{{ route("subdivisions.datatables") }}',
+            url: '{{ route("datatables.pelaporan") }}',
             type: 'GET',
             data: function(d) {
-                d.filter_q = $('#filter_q').val();
+                d.filter_q = $('#filter_q').val();  
             }
         },
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex' },
-            { data: 'name', name: 'name' },
-            { data: 'parent', name: 'parent' },
-            { data: 'type', name: 'type' },
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+            { data: 'title', name: 'title' },
+            { data: 'incident_datetime', name: 'incident_datetime' },
+            { data: 'status', name: 'status' },
             { data: 'action', name: 'action', orderable: false, searchable: false },
         ],
         order: [[1, 'asc']],
         language: {
-            paginate: { previous: '<<', next: '>>' }
+            paginate: {
+                previous: '<<',
+                next: '>>'
+            }
         }
     });
 
+    // Tombol filter
     $('#btnFilter').on('click', function() {
         table.draw();
     });
 
+    // Tombol clear filter
     $('#btnClear').on('click', function() {
         $('#filter_q').val('');
         table.draw();

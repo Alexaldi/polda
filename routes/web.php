@@ -5,10 +5,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubDivisionController;
+use App\Http\Controllers\PelaporanController;
+use App\Http\Controllers\DivisionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,9 +52,10 @@ Route::middleware(['auth'])->group(
         Route::resource('institutions',InstitutionController::class);
         
         //division and sub duvision routes
+        Route::resource('unit', SubDivisionController::class)->names('subdivisions');
         Route::get('subdivisions/datatables', [SubDivisionController::class, 'datatables'])
             ->name('subdivisions.datatables');
-        Route::resource('subdivisions', SubDivisionController::class)->except('show');
+        
 
         // role routes
         Route::resource('roles', RoleController::class);
@@ -62,5 +66,11 @@ Route::middleware(['auth'])->group(
         Route::get('datatables/sub-bagian', [DivisionController::class, 'datatables'])
             ->name('datatables.division');
 
+        //pelaporan route
+        Route::resource('pelaporan', PelaporanController::class);
+        Route::get('datatables/pelaporan', [PelaporanController::class, 'datatables'])->name('datatables.pelaporan');
+        Route::get('get-cities/{provinceId}', [PelaporanController::class, 'getCitiesByProvince']);
+        Route::get('get-districts/{cityId}', [PelaporanController::class, 'getDistrictsByCity']);
+    
     }
 );

@@ -13,9 +13,11 @@ use App\Interfaces\PermissionRepositoryInterface;
 use App\Interfaces\InstitutionRepositoryInterface;
 use App\Interfaces\ProfileRepositoryInterface;
 use App\Interfaces\SubDivisionRepositoryInterface;
+use App\Interfaces\PelaporanRepositoryInterface;
 use App\Repositories\DivisionRepository;
 use App\Repositories\ProfileRepository;
 use App\Repositories\SubDivisionRepository;
+use App\Repositories\PelaporanRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(InstitutionRepositoryInterface::class, InstitutionRepository::class);
         $this->app->bind(DivisionRepositoryInterface::class, DivisionRepository::class);
         $this->app->bind(SubDivisionRepositoryInterface::class, SubDivisionRepository::class);
+        $this->app->bind(PelaporanRepositoryInterface::class, PelaporanRepository::class);
     }
 
     /**
