@@ -70,6 +70,15 @@
                         <li><a href="{{ route('institutions.index')}}">Institusi</a></li>
                     </ul>
                 </li>
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                        <i class="material-symbols-outlined">assessment</i>
+                        <span class="nav-text">Laporan</span>
+                    </a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('pelaporan.index') }}">Pelaporan</a></li>
+                    </ul>
+                </li>
             </ul>
         </div>
     </div>
