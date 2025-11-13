@@ -157,13 +157,13 @@ $(document).ready(function() {
     var oldCityId = '{{ old('city_id', $pelaporan->city_id ?? '') }}';
     var oldDistrictId = '{{ old('district_id', $pelaporan->district_id ?? '') }}';
 
-    function loadCities(provinceId, selectedCityId = null) {
-        if(!provinceId) {
+    function loadCities(provinceId, selectedCityId = null){
+        if(!provinceId){
             $('#city_id').html('<option value="">Pilih Provinsi terlebih dahulu</option>');
             $('#district_id').html('<option value="">Pilih Kota terlebih dahulu</option>');
             return;
         }
-        $.get('{{ url("get-cities") }}/' + provinceId, function(data){
+        $.get('/get-cities/' + provinceId, function(data){
             $('#city_id').html('<option value="">Pilih Kota</option>');
             $.each(data, function(i, city){
                 var selected = city.id == selectedCityId ? 'selected' : '';
@@ -180,7 +180,7 @@ $(document).ready(function() {
             $('#district_id').html('<option value="">Pilih Kota terlebih dahulu</option>');
             return;
         }
-        $.get('{{ url("get-districts") }}/' + cityId, function(data){
+        $.get('/get-districts/' + cityId, function(data){
             $('#district_id').html('<option value="">Pilih Kecamatan</option>');
             $.each(data, function(i, district){
                 var selected = district.id == selectedDistrictId ? 'selected' : '';
