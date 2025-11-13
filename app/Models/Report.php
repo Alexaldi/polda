@@ -23,33 +23,49 @@ class Report extends Model
         'finish_time',
     ];
 
-    public function suspects()
+    protected $casts = [
+        'incident_datetime' => 'datetime',
+        'finish_time' => 'datetime',
+    ];
+
+    public function journeys(): HasMany
     {
-        return $this->hasMany(Suspect::class);
+        return $this->hasMany(ReportJourney::class, 'report_id');
     }
 
-    public function reportJourneys()
-    {
-        return $this->hasMany(ReportJourney::class);
-    }
-
-    public function reportCategory()
+    public function category(): BelongsTo
     {
         return $this->belongsTo(ReportCategory::class, 'category_id');
     }
 
-    public function province()
+    public function province(): BelongsTo
     {
         return $this->belongsTo(Province::class, 'province_id');
     }
 
-    public function city()
+    public function city(): BelongsTo
     {
         return $this->belongsTo(City::class, 'city_id');
     }
 
-    public function district()
+    public function district(): BelongsTo
     {
         return $this->belongsTo(District::class, 'district_id');
+    }
+
+    protected static function booted(): void
+    {
+        static::created(function (Report $report): void {
+            if ($report->journeys()->exists()) {
+                return;
+            }
+
+            $report->journeys()->create([
+                'type' => ReportJourneyType::SUBMITTED->value,
+                'description' => [
+                    'text' => 'Laporan diterima oleh sistem.',
+                ],
+            ]);
+        });
     }
 }
