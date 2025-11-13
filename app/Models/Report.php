@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\ReportJourneyType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 class Report extends Model
 {
     use HasFactory;
@@ -51,6 +53,16 @@ class Report extends Model
     public function district(): BelongsTo
     {
         return $this->belongsTo(District::class, 'district_id');
+    }
+
+    public function reportCategory()
+    {
+        return $this->belongsTo(ReportCategory::class, 'category_id');
+    }
+
+    public function suspects()
+    {
+        return $this->hasMany(Suspect::class, 'report_id');
     }
 
     protected static function booted(): void

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ReportJourneyType;
+use App\Models\Division;
+use App\Models\Institution;
 use App\Services\PelaporanService;
 use App\Repositories\PelaporanRepository;
 use Laravolt\Indonesia\Models\Province;
@@ -9,6 +12,7 @@ use Laravolt\Indonesia\Models\City;
 use Laravolt\Indonesia\Models\District;
 use App\Models\ReportCategory;
 use App\Models\Report;
+use App\Services\ReportJourneyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,7 +24,6 @@ class PelaporanController extends Controller
     {
         $this->repository = $repository;
         $this->service = $service;
-
         $this->feature_title = 'Pelaporan';
         $this->feature_name = 'Pelaporan';
         $this->feature_path = 'pelaporan';
@@ -229,28 +232,36 @@ class PelaporanController extends Controller
 
 
     /** Tampilkan detail laporan */
+   /** Tampilkan detail laporan + timeline journey */
     public function show($id)
     {
-        $report = Report::with([
-            'province',
-            'city',
-            'district',
-            'reportCategory', 
-            'suspects',
-            'reportJourneys'
-        ])->find($id);
+        // ambil report + relasi lokasi & kategori
+        $report = Report::with(['category', 'province', 'city', 'district'])
+            ->findOrFail($id);
 
-        if (!$report) {
-            return redirect()->route('pelaporan.index')->with('error', 'Laporan tidak ditemukan.');
-        }
+        // ambil journey pakai service lu
+        $journeyService = app(ReportJourneyService::class);
+        $journeys = $journeyService->paginateByReport($report->id, 5, order: 'desc');
+
+        // data dropdown
+        $institutions = Institution::orderBy('name')->get(['id', 'name']);
+        $divisions = Division::with('parent')
+            ->whereNotNull('parent_id')
+            ->orderBy('name')
+            ->get(['id', 'name', 'type', 'parent_id']);
+
+        $journeyTypes = ReportJourneyType::manualOptions();
+        $statusLabel = ReportJourneyType::tryFrom($report->status)?->label() ?? $report->status;
 
         return view('pages.pelaporan.show', [
-            'title' => 'Detail Laporan',
-            'report' => $report,
+            'report'       => $report,
+            'journeys'     => $journeys,
+            'journeyTypes' => $journeyTypes,
+            'institutions' => $institutions,
+            'divisions'    => $divisions,
+            'statusLabel'  => $statusLabel,
         ]);
     }
-
-
 
     /** Hapus laporan */
     public function destroy($id)

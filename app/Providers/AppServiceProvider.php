@@ -11,11 +11,16 @@ use App\Interfaces\UserRepositoryInterface;
 use App\Interfaces\RoleRepositoryInterface;
 use App\Interfaces\PermissionRepositoryInterface;
 use App\Interfaces\InstitutionRepositoryInterface;
+use App\Interfaces\PelaporanRepositoryInterface;
 use App\Interfaces\ProfileRepositoryInterface;
+use App\Interfaces\ReportJourneyRepositoryInterface;
 use App\Interfaces\SubDivisionRepositoryInterface;
 use App\Repositories\DivisionRepository;
+use App\Repositories\PelaporanRepository;
 use App\Repositories\ProfileRepository;
+use App\Repositories\ReportJourneyRepository;
 use App\Repositories\SubDivisionRepository;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {

@@ -73,12 +73,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('datatables/pelaporan', [PelaporanController::class, 'datatables'])->name('datatables.pelaporan');
         Route::get('get-cities/{provinceId}', [PelaporanController::class, 'getCitiesByProvince']);
         Route::get('get-districts/{cityId}', [PelaporanController::class, 'getDistrictsByCity']);
-    
-        //journey report routes
-        Route::get('/reports/{id}', [ReportController::class, 'show'])->name('reports.show');
 
         Route::post('/reports/{report}/journeys', [ReportJourneyController::class, 'store'])
             ->name('reports.journeys.store');
 
-    }
+    } 
 );
