@@ -235,23 +235,10 @@ class PelaporanController extends Controller
    /** Tampilkan detail laporan + timeline journey */
     public function show($id)
     {
-        // ambil report + relasi lokasi & kategori
-        $report = Report::with(['category', 'province', 'city', 'district'])
-            ->findOrFail($id);
-
-        // ambil journey pakai service lu
-        $journeyService = app(ReportJourneyService::class);
-        $journeys = $journeyService->paginateByReport($report->id, 5, order: 'desc');
-
-        // data dropdown
-        $institutions = Institution::orderBy('name')->get(['id', 'name']);
-        $divisions = Division::with('parent')
-            ->whereNotNull('parent_id')
-            ->orderBy('name')
-            ->get(['id', 'name', 'type', 'parent_id']);
-
-        $journeyTypes = ReportJourneyType::manualOptions();
-        $statusLabel = ReportJourneyType::tryFrom($report->status)?->label() ?? $report->status;
+        $report = $this->service->getById($id);
+        if (!$report) {
+            return redirect()->route('pelaporan.index')->with('error', 'Laporan tidak ditemukan.');
+        }
 
         return view('pages.pelaporan.show', [
             'report'       => $report,

@@ -73,9 +73,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('datatables/pelaporan', [PelaporanController::class, 'datatables'])->name('datatables.pelaporan');
         Route::get('get-cities/{provinceId}', [PelaporanController::class, 'getCitiesByProvince']);
         Route::get('get-districts/{cityId}', [PelaporanController::class, 'getDistrictsByCity']);
+        
+        //pemanggilan data dashboard
+        Route::get('/dashboard/status-summary', [DashboardController::class, 'statusSummary'])->name('dashboard.statusSummary');
+        Route::get('/dashboard/top-categories', [DashboardController::class, 'topCategories'])->name('dashboard.topCategories');
 
         Route::post('/reports/{report}/journeys', [ReportJourneyController::class, 'store'])
             ->name('reports.journeys.store');
 
-    } 
+    }
 );
