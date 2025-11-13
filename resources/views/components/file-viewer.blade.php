@@ -18,7 +18,7 @@
                 </div>
 
                 <div class="viewer-pdf d-none" data-viewer-pdf>
-                    <div class="ratio ratio-16x9">
+                    <div class="pdf-frame-wrapper">
                         <iframe
                             data-viewer-pdf-iframe
                             class="w-100 h-100 rounded shadow"
@@ -102,33 +102,49 @@
             object-fit: contain;
         }
 
-        #fileViewerModal .viewer-pdf iframe {
-            min-height: 70vh;
+        #fileViewerModal .pdf-frame-wrapper {
+            position: relative;
+            padding-top: 65%;
+            border-radius: 1rem;
             background: linear-gradient(160deg, rgba(148, 163, 184, 0.08), rgba(226, 232, 240, 0.15));
             border: 1px solid rgba(99, 102, 241, 0.25);
-            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        #fileViewerModal .viewer-pdf iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.98);
+            border: none;
+        }
+
+        body.dark-version #fileViewerModal .pdf-frame-wrapper,
+        body[data-bs-theme="dark"] #fileViewerModal .pdf-frame-wrapper {
+            background: rgba(15, 23, 42, 0.82);
+            border-color: rgba(99, 102, 241, 0.35);
         }
 
         body.dark-version #fileViewerModal .viewer-pdf iframe,
         body[data-bs-theme="dark"] #fileViewerModal .viewer-pdf iframe {
-            background: rgba(15, 23, 42, 0.82);
-            border-color: rgba(99, 102, 241, 0.35);
+            background-color: rgba(30, 41, 59, 0.95);
         }
 
         #fileViewerModal .viewer-docx {
             max-height: 70vh;
             overflow-y: auto;
-            padding: 1.25rem;
+            padding: 1.5rem;
             border-radius: 1rem;
-            background: linear-gradient(160deg, rgba(148, 163, 184, 0.08), rgba(226, 232, 240, 0.12));
-            border: 1px solid rgba(99, 102, 241, 0.22);
+            background: linear-gradient(160deg, rgba(248, 250, 252, 0.9), rgba(226, 232, 240, 0.6));
+            border: 1px solid rgba(148, 163, 184, 0.35);
         }
 
         body.dark-version #fileViewerModal .viewer-docx,
         body[data-bs-theme="dark"] #fileViewerModal .viewer-docx {
             background: rgba(15, 23, 42, 0.82);
             border-color: rgba(99, 102, 241, 0.35);
-            color: #f1f5f9;
+            color: #e2e8f0;
         }
 
         #fileViewerModal .viewer-message {
@@ -149,16 +165,17 @@
 
         #fileViewerModal .docx-scroll .docx-wrapper {
             margin: 0 auto;
-            background-color: rgba(255, 255, 255, 0.98);
+            background-color: #ffffff;
+            color: #1f2937;
             padding: 2rem;
             border-radius: 1rem;
-            border: 1px solid rgba(148, 163, 184, 0.18);
-            box-shadow: 0 25px 50px rgba(15, 23, 42, 0.15);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            box-shadow: 0 25px 50px rgba(15, 23, 42, 0.18);
         }
 
         body.dark-version #fileViewerModal .docx-scroll .docx-wrapper,
         body[data-bs-theme="dark"] #fileViewerModal .docx-scroll .docx-wrapper {
-            background-color: rgba(15, 23, 42, 0.95);
+            background-color: #0f172a;
             color: #f8fafc;
             border-color: rgba(148, 163, 184, 0.35);
             box-shadow: 0 25px 55px rgba(15, 23, 42, 0.65);
@@ -196,20 +213,23 @@
             const officeExtensions = ['doc', 'docx'];
             const pdfExtension = 'pdf';
 
-            const PDF_VIEWER_URL = 'https://mozilla.github.io/pdf.js/web/viewer.html?file=';
             const DOCX_SCRIPT_SRC = 'https://cdn.jsdelivr.net/npm/docx-preview@0.3.1/dist/docx-preview.min.js';
             const DOCX_STYLE_HREF = 'https://cdn.jsdelivr.net/npm/docx-preview@0.3.1/dist/docx-preview.min.css';
             const JSZIP_SCRIPT_SRC = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
             const DOCX_FALLBACK_STYLE = `
                 .docx-wrapper {
                     max-width: 900px;
-                    background: transparent !important;
-                    color: inherit !important;
-                    padding: 0 !important;
+                    background: #ffffff !important;
+                    color: #1f2937 !important;
+                    padding: 2rem !important;
+                    border-radius: 1rem;
+                    box-shadow: 0 25px 50px rgba(15, 23, 42, 0.18);
                 }
 
-                .docx-wrapper * {
-                    color: inherit !important;
+                body.dark-version .docx-wrapper,
+                body[data-bs-theme="dark"] .docx-wrapper {
+                    background: #0f172a !important;
+                    color: #f8fafc !important;
                 }
 
                 .docx-wrapper table {
@@ -355,10 +375,16 @@
             }
 
             function openPdf(url) {
+                if (!pdfWrapper || !pdfIframe) {
+                    showMessage('Pratinjau PDF tidak tersedia pada perangkat ini. Gunakan tombol unduh di bawah.', 'warning');
+                    return;
+                }
+
                 startLoading('Memuat dokumen PDF...');
-                setStatus('Menyiapkan viewer PDF.js (tampilan dokumen)');
+                setStatus('Menyiapkan pratinjau PDF');
                 resetPdfBlobUrl();
-                pdfIframe.src = 'about:blank';
+                pdfIframe.removeAttribute('src');
+                pdfIframe.removeAttribute('srcdoc');
 
                 fetchBlob(url)
                     .then(function (blob) {
@@ -376,8 +402,8 @@
                             showMessage('Pratinjau PDF tidak dapat dimuat. Gunakan tombol unduh di bawah.', 'warning');
                         };
 
-                        setStatus('Menunggu viewer menampilkan dokumen...');
-                        pdfIframe.src = PDF_VIEWER_URL + encodeURIComponent(objectUrl);
+                        setStatus('Menunggu pratinjau ditampilkan...');
+                        pdfIframe.src = objectUrl + '#toolbar=0&view=fitH';
                     })
                     .catch(function (error) {
                         console.error('Galat memuat PDF:', error);
@@ -527,7 +553,8 @@
                     imageEl.src = '';
                 }
                 if (pdfIframe) {
-                    pdfIframe.src = 'about:blank';
+                    pdfIframe.removeAttribute('src');
+                    pdfIframe.removeAttribute('srcdoc');
                 }
                 resetPdfBlobUrl();
                 if (docxContainer) {
