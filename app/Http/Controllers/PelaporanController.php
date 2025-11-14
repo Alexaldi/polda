@@ -239,7 +239,7 @@ class PelaporanController extends Controller
    /** Tampilkan detail laporan + timeline journey */
     public function show($id)
     {
-        $report = Report::with(['category', 'province', 'city', 'district'])->findOrFail($id);
+        $report = Report::with(['category', 'province', 'city', 'district','suspects'])->findOrFail($id);
 
         $journeys = $this->journeyService->paginateByReport($report->id, 5, order: 'desc');
 
@@ -251,7 +251,7 @@ class PelaporanController extends Controller
 
         $journeyTypes = ReportJourneyType::manualOptions();
 
-        return view('pages.reports.detail', [
+        return view('pages.pelaporan.show', [
             'report' => $report,
             'journeys' => $journeys,
             'journeyTypes' => $journeyTypes,
