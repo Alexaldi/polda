@@ -77,6 +77,11 @@ Route::middleware(['auth'])->group(function () {
         //pemanggilan data dashboard
         Route::get('/dashboard/status-summary', [DashboardController::class, 'statusSummary'])->name('dashboard.statusSummary');
         Route::get('/dashboard/top-categories', [DashboardController::class, 'topCategories'])->name('dashboard.topCategories');
+        Route::get('/dashboard/trend-reports', [DashboardController::class, 'getTrendReports'])->name('dashboard.trendReports');
+        Route::get('/dashboard/total-laporan', [DashboardController::class, 'getTotalReports']);
+        Route::get('/dashboard/top-category-active', [DashboardController::class, 'getTopCategoryAktif']);
+        Route::get('/dashboard/laporan-aktif', [DashboardController::class, 'getLaporanAktif']);
+        Route::get('/dashboard/completion-rate', [DashboardController::class, 'getPersentasiLaporanSelesai']);
 
         Route::post('/reports/{report}/journeys', [ReportJourneyController::class, 'store'])
             ->name('reports.journeys.store');
