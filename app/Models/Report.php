@@ -56,6 +56,18 @@ class Report extends Model
         return $this->belongsTo(District::class, 'district_id');
     }
 
+    public function reportCategory()
+    {
+        return $this->belongsTo(ReportCategory::class, 'category_id');
+    }
+
+    public function suspects()
+    {
+        return $this->hasMany(Suspect::class, 'report_id');
+    }
+
+
+
     protected static function booted(): void
     {
         static::created(function (Report $report): void {
