@@ -33,5 +33,46 @@ class DashboardController extends Controller
         return response()->json($topCategories);
     }
 
+    public function getTrendReports()
+    {
+        $data = $this->dashboardRepo->getTrendReports();
+
+        return response()->json($data);
+    }
+
+    public function getTotalReports()
+    {
+        $total = $this->dashboardRepo->getTotalReports();
+
+        return response()->json([
+            'total' => $total
+        ]);
+    }
+
+    public function getTopCategoryAktif()
+    {
+        $top = $this->dashboardRepo->getTopCategoryAktif();
+
+        return response()->json([
+            'category' => $top->category ?? '-',
+            'total' => $top->total ?? 0
+        ]);
+    }
+
+    public function getLaporanAktif()
+    {
+        $aktif = $this->dashboardRepo->getLaporanAktif();
+
+        return response()->json([
+            'aktif' => $aktif
+        ]);
+    }
+
+    public function getPersentasiLaporanSelesai()
+    {
+        $rate = $this->dashboardRepo->getPersentasiLaporanSelesai();
+        return response()->json(['rate' => $rate]);
+    }
+
    
 }

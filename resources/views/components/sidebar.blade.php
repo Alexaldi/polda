@@ -28,7 +28,6 @@
                         <li><a href="{{ route('divisions.index') }}">Sub Bagian</a></li>
                         <li><a href="{{ route('subdivisions.index')}}">Unit</a></li>
                         <li><a href="{{ route('institutions.index')}}">Institusi</a></li>
-                        <li><a href="#">Journey</a></li>
                     </ul>
                 </li>
                 <li>
