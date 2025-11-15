@@ -1,16 +1,4 @@
 @extends('layouts.dashboard')
-<style>
-    .form-select, .form-control {
-        background-color: #1e1e2d !important;
-        color: #fff !important;
-        border: 1px solid #444 !important;
-    }
-
-    .form-select option {
-        background-color: #1e1e2d !important;
-        color: #fff !important;
-    }
-</style>
 
 @section('content')
 <div class="container-fluid">
@@ -152,7 +140,9 @@
                                     <th>Kategori</th>
                                     <th>Status</th>
                                     <th>Tanggal Kejadian</th>
-                                    <th>Lokasi</th>
+                                    <th>Provinsi</th>
+                                    <th>Kota/Kabupaten</th>
+                                    <th>Kecamatan</th>
                                     <th>Dibuat</th>
                                     <th>Selesai</th>
                                     <th>Aksi</th>
@@ -167,7 +157,9 @@
                                     <th>Kategori</th>
                                     <th>Status</th>
                                     <th>Tanggal Kejadian</th>
-                                    <th>Lokasi</th>
+                                    <th>Provinsi</th>
+                                    <th>Kota/Kabupaten</th>
+                                    <th>Kecamatan</th>
                                     <th>Dibuat</th>
                                     <th>Selesai</th>
                                     <th>Aksi</th>
@@ -210,12 +202,14 @@
                 {data: 'category', name: 'category', orderable: false, searchable: false},
                 {data: 'status', name: 'status'},
                 {data: 'incident_at', name: 'incident_datetime'},
-                {data: 'location', name: 'location', orderable: false, searchable: false},
+                {data: 'province', name: 'province', orderable: false, searchable: false},
+                {data: 'city', name: 'city', orderable: false, searchable: false},
+                {data: 'district', name: 'district', orderable: false, searchable: false},
                 {data: 'created_at', name: 'created_at'},
                 {data: 'finished_at', name: 'finish_time'},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
-            order: [[7, 'desc']],
+            order: [[9, 'desc']],
             language: {
                 paginate: {
                     previous: '<<',

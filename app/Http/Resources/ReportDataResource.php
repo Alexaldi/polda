@@ -31,12 +31,6 @@ class ReportDataResource extends JsonResource
             $finish = null;
         }
 
-        $locationParts = array_filter([
-            optional($this->district)->name,
-            optional($this->city)->name,
-            optional($this->province)->name,
-        ]);
-
         return [
             'id' => $this->id,
             'code' => $this->code,
@@ -47,9 +41,8 @@ class ReportDataResource extends JsonResource
             'province' => optional($this->province)->name ?? '-',
             'city' => optional($this->city)->name ?? '-',
             'district' => optional($this->district)->name ?? '-',
-            'location' => $locationParts ? implode(', ', $locationParts) : '-',
-            'Dibuat' => $created ? $created->format('d/m/Y H:i') : '-',
-            'Selesai' => $finish ? $finish->format('d/m/Y H:i') : '-',
+            'created_at' => $created ? $created->format('d/m/Y H:i') : '-',
+            'finished_at' => $finish ? $finish->format('d/m/Y H:i') : '-',
             'action' => '<a href="' . route('pelaporan.show', $this->id) . '" class="btn btn-sm btn-info">'
                 . '<i class="fa fa-eye me-1"></i>Detail</a>',
         ];

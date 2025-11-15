@@ -35,16 +35,16 @@
     <thead>
     <tr>
         <th>No</th>
-        <th>Code</th>
-        <th>Title</th>
-        <th>Category</th>
+        <th>Kode</th>
+        <th>Judul</th>
+        <th>Kategori</th>
         <th>Status</th>
-        <th>Incident Datetime</th>
-        <th>Province</th>
-        <th>City</th>
-        <th>District</th>
-        <th>Created At</th>
-        <th>Finished At</th>
+        <th>Tanggal Kejadian</th>
+        <th>Provinsi</th>
+        <th>Kota/Kabupaten</th>
+        <th>Kecamatan</th>
+        <th>Dibuat</th>
+        <th>Selesai</th>
     </tr>
     </thead>
     <tbody>
