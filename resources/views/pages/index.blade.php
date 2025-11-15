@@ -1,5 +1,10 @@
 @extends('layouts.dashboard')
 @section('content')
+<style>
+    .dataTables_empty {
+        text-align: center !important;
+    }
+</style>
 <div class="container-fluid">
     <div class="row">
         <div class="col-xl-12">
@@ -185,7 +190,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
                 </div>
                 <div class="col-xl-6">
                     <div class="card">
@@ -566,22 +570,44 @@
                     '<tr><td>3</td><td>#RPT-1045</td><td>Koordinasi Institusi</td><td>15</td><td class="text-end"><button class="btn btn-sm btn-primary">Detail</button></td></tr>'
                 ].join('');
             }
+            
             $(document).ready(function() {
-                $('#table_tanpa_bukti').DataTable({
+                let table = $('#table_tanpa_bukti').DataTable({
                     processing: true,
-                    serverSide: false, 
-                    ajax: "{{ route('dashboard.reportsWithoutEvidence') }}",
+                    serverSide: false, // Kalau datanya tidak terlalu besar boleh false, kalau besar ganti ke true
+                    ajax: {
+                        url: "{{ route('dashboard.reportsWithoutEvidence') }}",
+                        data: function (d) {
+                            d.start_date = $('#filter_start_date').val();
+                            d.end_date   = $('#filter_end_date').val();
+                        },
+                        dataSrc: 'data'
+                    },
                     columns: [
-                        { data: 'DT_RowIndex', name: 'DT_RowIndex' },
+                        { data: null, render: (data, type, row, meta) => meta.row + 1 },
                         { data: 'code', name: 'code' },
                         { data: 'kategori', name: 'kategori' },
-                        { data: 'institusi', name: 'institusi' },
+                        { data: 'institusi', name: 'institusi', defaultContent: '-', className: "text-center" },
                     ],
-                    paging: false,      
-                    searching: false,   
-                    info: false         
+                    paging: false,
+                    searching: false,
+                    info: false
+                });
+
+                // Apply Filter
+                $('#btn_apply_date_filter').on('click', function() {
+                    table.ajax.reload();
+                });
+
+                // Reset Filter
+                $('#btn_reset_date_filter').on('click', function() {
+                    $('#filter_start_date').val('');
+                    $('#filter_end_date').val('');
+                    table.ajax.reload();
                 });
             });
+
+
         }
 
         function getFilterParams() {

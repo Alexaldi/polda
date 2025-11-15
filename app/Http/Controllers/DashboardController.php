@@ -17,7 +17,7 @@ class DashboardController extends Controller
 
     public function index()
     {
-        return view('pages.index'); // sudah tidak butuh institutions
+        return view('pages.index'); 
     }
 
     public function statusSummary(Request $request)
@@ -131,5 +131,18 @@ class DashboardController extends Controller
             )
         );
     }
+
+    public function reportsWithoutEvidence(Request $request)
+    {
+        $start = $request->start_date;
+        $end   = $request->end_date;
+
+        $query = $this->dashboardRepo->getReportsWithoutEvidenceQuery($start, $end);
+
+        return response()->json([
+            'data' => $query->get()
+        ]);
+    }
+
 
 }

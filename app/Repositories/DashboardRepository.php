@@ -205,13 +205,43 @@ class DashboardRepository
         return round(($withEvidence / $total) * 100);
     }
 
-    public function getReportsWithoutEvidenceQuery()
+    // ========================================
+    // REPORTS WITHOUT EVIDENCE QUERY
+    // ========================================
+    public function getReportsWithoutEvidenceQuery($start = null, $end = null)
     {
-        return Report::with(['category', 'journeys.institution'])
-            ->whereDoesntHave('journeys.evidences', function($q) {
-                $q->whereNotNull('file_url')->where('file_url', '<>', '');
+        $query = Report::query()
+            ->select([
+                'reports.id',
+                'reports.code',
+                'report_categories.name as kategori',
+                \DB::raw('(SELECT i.type 
+                    FROM report_journeys rj
+                    JOIN institutions i ON i.id = rj.institution_id
+                    WHERE rj.report_id = reports.id
+                    LIMIT 1
+                ) AS institusi'),
+            ])
+            ->join('report_categories', 'report_categories.id', '=', 'reports.category_id')
+            ->whereNotExists(function ($q) {
+                $q->select(\DB::raw(1))
+                ->from('report_evidences')
+                ->whereColumn('report_evidences.report_id', 'reports.id')
+                ->whereNotNull('file_url')
+                ->where('file_url', '<>', '');
             });
+
+        // Apply date filter
+        if ($start && $end) {
+            $query->whereBetween('reports.created_at', [
+                $start . ' 00:00:00',
+                $end . ' 23:59:59'
+            ]);
+        }
+
+        return $query;
     }
+
 
 
     // ========================================
