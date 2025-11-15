@@ -84,10 +84,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard/completion-rate', [DashboardController::class, 'getPersentasiLaporanSelesai']);
         Route::get('/dashboard/avg-resolution', [DashboardController::class, 'getAvgResolution']);
         Route::get('/dashboard/recent-reports', [DashboardController::class, 'recentReports']);
-        Route::get('/dashboard/kpi-with-evidence', [DashboardController::class, 'kpiWithEvidence'])->name('dashboard.kpiWithEvidence');
-        Route::get('/dashboard/reports-without-evidence', [DashboardController::class, 'reportsWithoutEvidence'])
-             ->name('dashboard.reportsWithoutEvidence');
-
+        Route::get('/dashboard/kpi-with-evidence', [DashboardController::class, 'kpiWithEvidence']);
+        Route::get('/dashboard/top-institusi',[DashboardController::class, 'getTopInstitusi'])->name('dashboard.topInstitusi');
 
         Route::post('/reports/{report}/journeys', [ReportJourneyController::class, 'store'])
             ->name('reports.journeys.store');
