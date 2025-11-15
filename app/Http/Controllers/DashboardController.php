@@ -137,12 +137,29 @@ class DashboardController extends Controller
         $start = $request->start_date;
         $end   = $request->end_date;
 
-        $query = $this->dashboardRepo->getReportsWithoutEvidenceQuery($start, $end);
+        $reports = $this->dashboardRepo
+            ->getReportsWithoutEvidenceQuery($start, $end)
+            ->get()
+            ->map(function ($report) {
+                return [
+                    'id'        => $report->id,
+                    'code'      => $report->code,
+                    'kategori'  => $report->kategori,
+                    'institusi' => $report->institusi ?? '-',
+                ];
+            });
 
-        return response()->json([
-            'data' => $query->get()
-        ]);
+        return response()->json($reports);
     }
 
+    public function backlogPerTahap(Request $request)
+    {
+        return response()->json(
+            $this->dashboardRepo->getBacklogPerTahap(
+                $request->start_date,
+                $request->end_date
+            )
+        );
+    }
 
 }
