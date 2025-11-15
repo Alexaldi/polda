@@ -132,4 +132,15 @@ class DashboardController extends Controller
         );
     }
 
+    public function backlogPerTahap(Request $request)
+    {
+        return response()->json(
+            $this->dashboardRepo->getBacklogPerTahap(
+                $request->start_date,
+                $request->end_date
+            )
+        );
+    }
+
+
 }
