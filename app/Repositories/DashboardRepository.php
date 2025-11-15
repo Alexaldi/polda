@@ -204,4 +204,31 @@ class DashboardRepository
         return round(($withEvidence / $total) * 100);
     }
 
+    // ========================================
+    // Top Isntitusi by Report Count
+    // ========================================
+
+   public function getTopInstitusi($start = null, $end = null)
+    {
+        return DB::table('report_journeys')
+            ->join('institutions', 'institutions.id', '=', 'report_journeys.institution_id')
+            ->join('reports', 'reports.id', '=', 'report_journeys.report_id')
+            ->when($start && $end, function($q) use ($start, $end){
+                $q->whereBetween('reports.created_at', [
+                    $start . ' 00:00:00',
+                    $end . ' 23:59:59'
+                ]);
+            })
+            ->select(
+                'institutions.name as institution',
+                DB::raw('COUNT(DISTINCT reports.id) as total')
+            )
+            ->groupBy('institutions.id', 'institutions.name')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->get();
+    }
+
+
+
 }

@@ -300,7 +300,7 @@
 <script src="{{ asset('dashboard/vendor/apexchart/apexchart.js') }}"></script>
 <script src="{{ asset('dashboard/vendor/chart-js/chart.bundle.min.js') }}"></script>
 <!-- Dashboard 1 -->
-<script src="{{ asset('dashboard/js/dashboard/dashboard-1.js') }}"></script>
+{{-- <script src="{{ asset('dashboard/js/dashboard/dashboard-1.js') }}"></script> --}}
 <script>
     // Dummy data initializer for Dashboard KPIs, Charts, and Tables
     (function() {
@@ -524,15 +524,37 @@
             });
 
             // 4) Top Institusi berdasarkan jumlah laporan
-            var institusiLabels = ['Polda A', 'Polres B', 'Polsek C', 'Polda D', 'Polres E'];
-            var institusiCounts = [40, 33, 29, 25, 21];
-            render('chart_top_institusi', {
-                chart: { type: 'bar', height: 280, toolbar: { show: false } },
-                series: [{ name: 'Jumlah', data: institusiCounts }],
-                xaxis: { categories: institusiLabels },
-                plotOptions: { bar: { horizontal: true } },
-                dataLabels: { enabled: false },
-                colors: ['#0ea5e9']
+            $(document).ready(function () {
+            $.ajax({
+                    url: "{{ route('dashboard.topInstitusi') }}",
+                    method: "GET",
+                    data: getFilterParams(), // supaya ikut filter tanggal
+                    success: function (res) {
+
+                        let labels = res.map(item => item.institution);
+                        let counts = res.map(item => item.total);
+
+                        var options = {
+                            chart: { type: 'bar', height: 280, toolbar: { show: false } },
+                            series: [{ name: 'Jumlah', data: counts }],
+                            xaxis: { categories: labels },
+                            plotOptions: { bar: { horizontal: true } },
+                            dataLabels: { enabled: false },
+                            colors: ['#0ea5e9']
+                        };
+
+                        if (window.ApexCharts) {
+                            var chart = new ApexCharts(
+                                document.querySelector("#chart_top_institusi"),
+                                options
+                            );
+                            chart.render();
+                        }
+                    },
+                    error: function (err) {
+                        console.error("Gagal mengambil data top institusi:", err);
+                    }
+                });
             });
         }
 
