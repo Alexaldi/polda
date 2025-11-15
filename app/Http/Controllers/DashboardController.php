@@ -120,4 +120,15 @@ class DashboardController extends Controller
             )
         ]);
     }
+
+    public function getTopInstitusi(Request $request)
+    {
+        return response()->json(
+            $this->dashboardRepo->getTopInstitusi(
+                $request->start_date,
+                $request->end_date
+            )
+        );
+    }
+
 }
