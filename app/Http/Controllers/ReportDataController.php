@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ReportJourneyType;
-use App\Exports\ReportDataExcelExport;
 use App\Http\Requests\ReportDataFilterRequest;
 use App\Http\Resources\ReportDataResource;
 use App\Models\ReportCategory;
@@ -15,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Laravolt\Indonesia\Models\City;
 use Laravolt\Indonesia\Models\District;
 use Laravolt\Indonesia\Models\Province;
-use Maatwebsite\Excel\Facades\Excel;
+use Rap2hpoutre\FastExcel\FastExcel;
 
 class ReportDataController extends Controller
 {
@@ -70,11 +69,11 @@ class ReportDataController extends Controller
         $columnMap = [
             1 => 'code',
             2 => 'title',
-            3 => 'title', // category column fallback
+            3 => 'title',
             4 => 'status',
             5 => 'incident_datetime',
-            6 => 'created_at',
-            7 => 'finish_time',
+            6 => 'Dibuat',
+            7 => 'Selesai',
         ];
 
         $orderColumnIndex = (int) $request->input('order.0.column', 6);
@@ -117,14 +116,37 @@ class ReportDataController extends Controller
     }
 
     public function exportExcel(ReportDataFilterRequest $request)
-    {
-        $filters = $request->filters();
-        $filters['sort_by'] = $filters['sort_by'] ?? 'created_at';
-        $filters['sort_dir'] = $filters['sort_dir'] ?? 'desc';
+{
+    $filters = $request->filters();
+    $reports = $this->service->buildQuery($filters)->with([
+        'category',
+        'province',
+        'city',
+        'district',
+    ])->get();
 
-        $filename = 'report-data-' . now()->format('Ymd-Hi') . '.xlsx';
+    $filename = 'report-data-' . now()->format('Ymd-Hi') . '.xlsx';
 
-        return Excel::download(new ReportDataExcelExport($this->service, $filters), $filename);
+        return (new FastExcel($reports))->download($filename, function ($report) {
+            return [
+                'Code' => $report->code,
+                'Title' => $report->title,
+                'Category' => optional($report->category)->name ?? '-',
+                'Status' => $report->status,
+                'Incident At' => $report->incident_datetime
+                    ? $report->incident_datetime->format('d/m/Y H:i')
+                    : '-',
+                'Province' => optional($report->province)->name ?? '-',
+                'City' => optional($report->city)->name ?? '-',
+                'District' => optional($report->district)->name ?? '-',
+                'Created At' => $report->created_at
+                    ? $report->created_at->format('d/m/Y H:i')
+                    : '-',
+                'Finished At' => $report->finish_time
+                    ? $report->finish_time->format('d/m/Y H:i')
+                    : '-',
+            ];
+        });
     }
 
     public function exportPdf(ReportDataFilterRequest $request)

@@ -1,4 +1,16 @@
 @extends('layouts.dashboard')
+<style>
+    .form-select, .form-control {
+        background-color: #1e1e2d !important;
+        color: #fff !important;
+        border: 1px solid #444 !important;
+    }
+
+    .form-select option {
+        background-color: #1e1e2d !important;
+        color: #fff !important;
+    }
+</style>
 
 @section('content')
 <div class="container-fluid">

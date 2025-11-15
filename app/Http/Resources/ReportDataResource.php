@@ -48,8 +48,8 @@ class ReportDataResource extends JsonResource
             'city' => optional($this->city)->name ?? '-',
             'district' => optional($this->district)->name ?? '-',
             'location' => $locationParts ? implode(', ', $locationParts) : '-',
-            'created_at' => $created ? $created->format('d/m/Y H:i') : '-',
-            'finished_at' => $finish ? $finish->format('d/m/Y H:i') : '-',
+            'Dibuat' => $created ? $created->format('d/m/Y H:i') : '-',
+            'Selesai' => $finish ? $finish->format('d/m/Y H:i') : '-',
             'action' => '<a href="' . route('pelaporan.show', $this->id) . '" class="btn btn-sm btn-info">'
                 . '<i class="fa fa-eye me-1"></i>Detail</a>',
         ];
