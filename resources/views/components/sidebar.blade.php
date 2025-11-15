@@ -37,6 +37,7 @@
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('pelaporan.index') }}">Pelaporan</a></li>
+                        <li><a href="{{ route('report-data.index') }}">Report Data</a></li>
                     </ul>
                 </li>
             </ul>
