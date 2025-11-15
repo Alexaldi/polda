@@ -8,6 +8,7 @@ use App\Models\Institution;
 use App\Models\ReportCategory;
 use App\Models\ReportJourney;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class DashboardRepository
 {
@@ -38,7 +39,13 @@ class DashboardRepository
             ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
             ->groupBy('date')
             ->orderBy('date', 'asc')
-            ->get();
+            ->get()
+            ->map(function($item) {
+                // Simpan dua format: YYYY-MM-DD untuk pencarian, DD-MM-YYYY untuk label
+                $item->date_iso = Carbon::parse($item->date)->format('Y-m-d'); // untuk JS mencari
+                $item->date_label = Carbon::parse($item->date)->format('d-m-Y'); // untuk label di chart
+                return $item;
+            });
     }
 
     public function getTotalReports()
@@ -86,23 +93,21 @@ class DashboardRepository
     public function getAverageResolutionTime()
     {
         try {
-            $results = ReportJourney::where('report_journeys.type', 'SELESAI')
+            $avgHours = ReportJourney::where('type', 'SELESAI')
                 ->join('reports', 'reports.id', '=', 'report_journeys.report_id')
                 ->whereNotNull('reports.created_at')
                 ->whereNotNull('report_journeys.created_at')
-                ->select(DB::raw('TIMESTAMPDIFF(DAY, reports.created_at, report_journeys.created_at) as diff'))
-                ->pluck('diff');
+                ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, reports.created_at, report_journeys.created_at) / 60) as avg_hours')
+                ->value('avg_hours');
 
-            if ($results->isEmpty()) {
-                return 0;
-            }
-
-            return round($results->avg(), 1);
+            return round($avgHours, 2); 
         } catch (\Exception $e) {
             \Log::error('AVG RESOLUTION ERROR: ' . $e->getMessage());
             return 0;
         }
     }
+
+
 
     public function getRecentReports()
     {
@@ -132,18 +137,27 @@ class DashboardRepository
         });
     }
 
-    public function getPercentWithEvidenceSimple()
+    public function getPercentWithEvidence()
     {
         $total = Report::count();
 
-        $withEvidence = Report::whereHas('journeys.evidences', function ($query) {
+        $withEvidence = Report::whereHas('evidences', function ($query) {
             $query->whereNotNull('file_url')
-                ->where('file_url', '<>', '');
+                  ->where('file_url', '<>', '');
         })->count();
 
-        if ($total == 0) return 0;
+        if ($total === 0) return 0;
 
         return round(($withEvidence / $total) * 100);
     }
+
+    public function getReportsWithoutEvidenceQuery()
+    {
+        return Report::with(['category', 'journeys.institution'])
+            ->whereDoesntHave('journeys.evidences', function($q) {
+                $q->whereNotNull('file_url')->where('file_url', '<>', '');
+            });
+    }
+
 
 }

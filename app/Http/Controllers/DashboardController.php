@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Repositories\DashboardRepository;
+use Yajra\DataTables\DataTables;
 
 class DashboardController extends Controller
 {
@@ -101,10 +102,39 @@ class DashboardController extends Controller
 
     public function kpiWithEvidence()
     {
-        $percent = $this->dashboardRepo->getPercentWithEvidenceSimple();
+        $rate = $this->dashboardRepo->getPercentWithEvidence();
 
         return response()->json([
-            'rate' => $percent
+            'rate' => $rate
+        ]);
+    }
+
+    public function reportsWithoutEvidence(Request $request)
+    {
+        $query = $this->dashboardRepo->getReportsWithoutEvidenceQuery();
+
+        // ambil semua data tanpa paginate
+        $reports = $query->get();
+
+        $data = [];
+        foreach ($reports as $key => $report) {
+            // ambil institution dari report_journeys
+            $institusi = $report->journeys
+                ->pluck('institution.type')
+                ->filter()
+                ->unique()
+                ->implode(', ') ?: '-';
+
+            $data[] = [
+                'DT_RowIndex' => $key + 1,
+                'code' => $report->code,
+                'kategori' => $report->category?->name ?? '-',
+                'institusi' => $institusi,
+            ];
+        }
+
+        return response()->json([
+            'data' => $data,
         ]);
     }
 
