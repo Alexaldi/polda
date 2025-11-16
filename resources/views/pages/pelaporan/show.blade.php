@@ -95,7 +95,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold" for="journey-type">Jenis Tahapan</label>
-                            <select name="type" id="journey-type" class="form-select" required>
+                            <select name="type" id="journey-type" class="form-control" required>
                                 <option value="">-- Pilih Tahapan --</option>
                                 @foreach($journeyTypes as $type)
                                     <option value="{{ $type->value }}" @selected(old('type') === $type->value)>
@@ -107,7 +107,7 @@
 
                         <div class="col-md-6" id="limpah-institution-field" hidden>
                             <label class="form-label fw-semibold" for="institution-target">Institusi Tujuan</label>
-                            <select name="institution_target_id" id="institution-target" class="form-select">
+                            <select name="institution_target_id" id="institution-target" class="form-control">
                                 <option value="">-- Pilih Institusi --</option>
                                 @foreach($institutions as $institution)
                                     <option value="{{ $institution->id }}" @selected((int) old('institution_target_id') === $institution->id)>
@@ -119,7 +119,7 @@
 
                         <div class="col-md-6" id="limpah-division-field" hidden>
                             <label class="form-label fw-semibold" for="subdivision-target">Unit/Sub-bagian Tujuan</label>
-                            <select name="subdivision_target_id" id="subdivision-target" class="form-select">
+                            <select name="subdivision_target_id" id="subdivision-target" class="form-control">
                                 <option value="">-- Pilih Unit/Sub-bagian --</option>
                                 @foreach($divisions as $division)
                                     <option value="{{ $division->id }}">

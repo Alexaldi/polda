@@ -21,7 +21,7 @@
                                 </div>
                                 <div class="col-xl-4 col-lg-6">
                                     <label class="form-label">Status</label>
-                                    <select class="form-select" id="filter_status" name="status">
+                                    <select class="form-control select2" id="filter_status" name="status">
                                         <option value="">Semua Status</option>
                                         @foreach ($statuses as $status)
                                             <option value="{{ $status['value'] }}">{{ $status['label'] }}</option>
@@ -30,7 +30,7 @@
                                 </div>
                                 <div class="col-xl-4 col-lg-6">
                                     <label class="form-label">Kategori</label>
-                                    <select class="form-select" id="filter_category_id" name="category_id">
+                                    <select class="form-control select2" id="filter_category_id" name="category_id">
                                         <option value="">Semua Kategori</option>
                                         @foreach ($categories as $category)
                                             <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -39,7 +39,7 @@
                                 </div>
                                 <div class="col-xl-4 col-lg-6">
                                     <label class="form-label">Provinsi</label>
-                                    <select class="form-select" id="filter_province_id" name="province_id">
+                                    <select class="form-control select2" id="filter_province_id" name="province_id">
                                         <option value="">Semua Provinsi</option>
                                         @foreach ($provinces as $province)
                                             <option value="{{ $province->id }}">{{ $province->name }}</option>
@@ -48,13 +48,13 @@
                                 </div>
                                 <div class="col-xl-4 col-lg-6">
                                     <label class="form-label">Kota/Kabupaten</label>
-                                    <select class="form-select" id="filter_city_id" name="city_id">
+                                    <select class="form-control select2" id="filter_city_id" name="city_id">
                                         <option value="">Semua Kota/Kabupaten</option>
                                     </select>
                                 </div>
                                 <div class="col-xl-4 col-lg-6">
                                     <label class="form-label">Kecamatan</label>
-                                    <select class="form-select" id="filter_district_id" name="district_id">
+                                    <select class="form-control select2" id="filter_district_id" name="district_id">
                                         <option value="">Semua Kecamatan</option>
                                     </select>
                                 </div>
@@ -81,7 +81,7 @@
                                 </div>
                                 <div class="col-xl-4 col-lg-6">
                                     <label class="form-label">Urut Berdasarkan</label>
-                                    <select class="form-select" id="filter_sort_by" name="sort_by">
+                                    <select class="form-control" id="filter_sort_by" name="sort_by">
                                         <option value="">Default (Tanggal Dibuat)</option>
                                         <option value="created_at">Tanggal Dibuat</option>
                                         <option value="incident_datetime">Tanggal Kejadian</option>
@@ -93,7 +93,7 @@
                                 </div>
                                 <div class="col-xl-4 col-lg-6">
                                     <label class="form-label">Arah Pengurutan</label>
-                                    <select class="form-select" id="filter_sort_dir" name="sort_dir">
+                                    <select class="form-control" id="filter_sort_dir" name="sort_dir">
                                         <option value="desc">Turun</option>
                                         <option value="asc">Naik</option>
                                     </select>
@@ -298,6 +298,60 @@
             $('#filter_city_id').html('<option value="">Semua Kota/Kabupaten</option>');
             $('#filter_district_id').html('<option value="">Semua Kecamatan</option>');
         }
+
+        // PROVINSI → KOTA (sync select2)
+        $('#filter_province_id').on('change', function () {
+            const provinceId = $(this).val();
+            $('#filter_city_id').html('<option value="">Semua Kota/Kabupaten</option>');
+            $('#filter_district_id').html('<option value="">Semua Kecamatan</option>');
+
+            if (!provinceId) {
+                $('#filter_city_id').trigger('change.select2');
+                $('#filter_district_id').trigger('change.select2');
+                return;
+            }
+
+            const url = citiesEndpointTemplate.replace('__province__', provinceId);
+
+            $.get(url, function (response) {
+                $('#filter_city_id').html('<option value="">Pilih Kota</option>');
+                if (Array.isArray(response)) {
+                    response.forEach(city => {
+                        $('#filter_city_id').append(
+                            `<option value="${city.id}">${city.name}</option>`
+                        );
+                    });
+                }
+                $('#filter_city_id').trigger('change.select2');
+            });
+        });
+
+        // KOTA → KECAMATAN (sync select2)
+        $('#filter_city_id').on('change', function () {
+            const cityId = $(this).val();
+            $('#filter_district_id').html('<option value="">Semua Kecamatan</option>');
+
+            if (!cityId) {
+                $('#filter_district_id').trigger('change.select2');
+                return;
+            }
+
+            const url = districtsEndpointTemplate.replace('__city__', cityId);
+
+            $.get(url, function (response) {
+                $('#filter_district_id').html('<option value="">Pilih Kecamatan</option>');
+                if (Array.isArray(response)) {
+                    response.forEach(dist => {
+                        $('#filter_district_id').append(
+                            `<option value="${dist.id}">${dist.name}</option>`
+                        );
+                    });
+                }
+                $('#filter_district_id').trigger('change.select2');
+            });
+        });
+
+
     });
 </script>
 @endsection

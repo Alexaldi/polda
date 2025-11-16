@@ -54,10 +54,14 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('institutions', InstitutionController::class);
         
         //division and sub duvision routes
-        Route::resource('unit', SubDivisionController::class)->names('subdivisions');
+        Route::resource('unit', SubDivisionController::class)
+            ->names('subdivisions');
+
         Route::get('subdivisions/datatables', [SubDivisionController::class, 'datatables'])
             ->name('subdivisions.datatables');
-        Route::resource('subdivisions', SubDivisionController::class)->except('show');
+
+        // Route::resource('subdivisions', SubDivisionController::class)->except('show');
+
 
         // role routes
         Route::resource('roles', RoleController::class);
