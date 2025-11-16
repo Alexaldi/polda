@@ -6,8 +6,11 @@
         <div class="col-xl-8 col-lg-10">
             <div class="card shadow-sm border-0 report-detail-card">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Detail Laporan Pelanggaran</h5>
-                    <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#journeyModal">
+                    <a href="{{ route('pelaporan.index') }}" class="btn btn-light text-primary btn-sm">
+                        <i class="fa fa-arrow-left me-1"></i> Kembali
+                    </a>
+                    <h5 class="text-white mb-0">Detail Laporan Pelanggaran</h5>
+                    <button class="btn btn-light text-primary btn-sm" data-bs-toggle="modal" data-bs-target="#journeyModal">
                         <i class="fa fa-plus me-1"></i> Tambah Tahapan Penanganan
                     </button>
                 </div>
@@ -29,8 +32,8 @@
                         <div>
                             <h4 class="mb-2">{{ $report->title }}</h4>
                             <div class="d-flex flex-wrap align-items-center gap-2">
-                                <span class="badge bg-light text-dark">Kode: {{ $report->code ?? '-' }}</span>
-                                <span class="badge bg-secondary text-uppercase">Status: {{ $statusLabel ?? '-' }}</span>
+                                <span class="badge bg-body-secondary text-body">Kode: {{ $report->code ?? '-' }}</span>
+                                <span class="badge bg-primary-subtle text-primary text-uppercase">Status: {{ $statusLabel ?? '-' }}</span>
                             </div>
                         </div>
                         <div class="text-md-end">
@@ -95,7 +98,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold" for="journey-type">Jenis Tahapan</label>
-                            <select name="type" id="journey-type" class="form-select" required>
+                            <select name="type" id="journey-type" class="form-control" required>
                                 <option value="">-- Pilih Tahapan --</option>
                                 @foreach($journeyTypes as $type)
                                     <option value="{{ $type->value }}" @selected(old('type') === $type->value)>
@@ -107,7 +110,7 @@
 
                         <div class="col-md-6" id="limpah-institution-field" hidden>
                             <label class="form-label fw-semibold" for="institution-target">Institusi Tujuan</label>
-                            <select name="institution_target_id" id="institution-target" class="form-select">
+                            <select name="institution_target_id" id="institution-target" class="form-control">
                                 <option value="">-- Pilih Institusi --</option>
                                 @foreach($institutions as $institution)
                                     <option value="{{ $institution->id }}" @selected((int) old('institution_target_id') === $institution->id)>
@@ -119,7 +122,7 @@
 
                         <div class="col-md-6" id="limpah-division-field" hidden>
                             <label class="form-label fw-semibold" for="subdivision-target">Unit/Sub-bagian Tujuan</label>
-                            <select name="subdivision_target_id" id="subdivision-target" class="form-select">
+                            <select name="subdivision_target_id" id="subdivision-target" class="form-control">
                                 <option value="">-- Pilih Unit/Sub-bagian --</option>
                                 @foreach($divisions as $division)
                                     <option value="{{ $division->id }}">
@@ -152,7 +155,7 @@
                                 multiple
                                 accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
                             >
-                            <small class="text-muted">
+                            <small class="form-text">
                                 *Bisa unggah lebih dari satu file (foto, dokumen, atau bukti lainnya).
                             </small>
                         </div>
@@ -175,45 +178,35 @@
 
 @push('styles')
 <style>
-    .report-detail-card .card-header h5 {
-        color: #ffffff;
+    .report-detail-card .card-header {
+        border-bottom: 1px solid var(--bs-border-color);
     }
 
     .report-detail-body {
         color: var(--bs-body-color);
-        background-color: transparent;
     }
 
-    .report-detail-body h4,
-    .report-detail-body p,
-    .report-detail-body .badge,
-    .report-detail-body .list-group-item,
-    .report-detail-body .list-group-item .small,
-    .report-detail-body .list-group-item span,
-    .report-detail-body .list-group-item button,
-    .report-detail-body .text-muted,
-    .report-detail-body .text-body {
+    .report-detail-body .badge {
         color: inherit;
     }
 
-    .report-detail-body .list-group-item {
-        background-color: transparent;
+    #journeyModal .modal-content {
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border-color: var(--bs-border-color);
     }
 
-    [data-theme-version="dark"] .report-detail-body {
-        color: #f1f5f9;
+    #journeyModal .modal-body,
+    #journeyModal .modal-footer {
+        background-color: inherit;
     }
 
-    [data-theme-version="dark"] .report-detail-body .text-muted {
-        color: rgba(241, 245, 249, 0.7) !important;
+    #journeyModal .form-label {
+        color: var(--bs-body-color);
     }
 
-    [data-theme-version="dark"] .report-detail-body .list-group-item {
-        background-color: rgba(15, 23, 42, 0.35);
-    }
-
-    [data-theme-version="dark"] .report-detail-body .badge.bg-light {
-        color: #0f172a;
+    #journeyModal .form-text {
+        color: var(--bs-secondary-color);
     }
 </style>
 @endpush

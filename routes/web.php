@@ -11,9 +11,10 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubDivisionController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\ReportJourneyController;
-use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PelaporanController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ReportDataController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,10 +55,14 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('institutions', InstitutionController::class);
         
         //division and sub duvision routes
-        Route::resource('unit', SubDivisionController::class)->names('subdivisions');
+        Route::resource('unit', SubDivisionController::class)
+            ->names('subdivisions');
+
         Route::get('subdivisions/datatables', [SubDivisionController::class, 'datatables'])
             ->name('subdivisions.datatables');
-        Route::resource('subdivisions', SubDivisionController::class)->except('show');
+
+        // Route::resource('subdivisions', SubDivisionController::class)->except('show');
+
 
         // role routes
         Route::resource('roles', RoleController::class);
@@ -74,6 +79,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('datatables/pelaporan', [PelaporanController::class, 'datatables'])->name('datatables.pelaporan');
         Route::get('get-cities/{provinceId}', [PelaporanController::class, 'getCitiesByProvince']);
         Route::get('get-districts/{cityId}', [PelaporanController::class, 'getDistrictsByCity']);
+
+        // report data routes
+        Route::get('report-data', [ReportDataController::class, 'index'])->name('report-data.index');
+        Route::get('datatables/report-data', [ReportDataController::class, 'datatables'])->name('datatables.report-data');
+        Route::get('report-data/export/excel', [ReportDataController::class, 'exportExcel'])->name('report-data.export.excel');
+        Route::get('report-data/export/pdf', [ReportDataController::class, 'exportPdf'])->name('report-data.export.pdf');
+        Route::get('report-data/cities/{province}', [ReportDataController::class, 'getCitiesByProvince'])->name('report-data.cities');
+        Route::get('report-data/districts/{city}', [ReportDataController::class, 'getDistrictsByCity'])->name('report-data.districts');
         
         //pemanggilan data dashboard
         Route::get('/dashboard/status-summary', [DashboardController::class, 'statusSummary'])->name('dashboard.statusSummary');

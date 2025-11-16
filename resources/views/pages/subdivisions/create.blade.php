@@ -21,7 +21,7 @@
                         <!-- Parent Division -->
                         <div class="form-group mb-3">
                             <label>Divisi Induk</label>
-                            <select name="parent_id" class="form-control" required>
+                            <select name="parent_id" class="form-control select2" required>
                                 <option value="">-- Pilih Divisi Induk --</option>
                                 @foreach ($parentDivisions as $parent)
                                     <option value="{{ $parent->id }}" 
