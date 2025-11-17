@@ -43,3 +43,12 @@ Untuk setiap terlapor, mencakup:
 - **suspects**: Menyimpan data identitas terlapor
 - **report_journeys**: Menyimpan urutan kejadian laporan
 - **access_datas**: Menyimpan data akses (is_finish = false)
+
+## Logic List Data Pelaporan dan Report Pelaporan
+### Logic List Data Pelaporan
+- **Admin**: Bisa melihat semua data laporan
+- **Selain Admin**: Hanya bisa melihat data laporan sesuai aksesnya, ambil data dari table access_datas
+
+### Logic Report Pelaporan
+- **Admin**: Bisa melihat semua laporan
+- **Selain Admin**: Hanya bisa melihat laporan sesuai aksesnya, ambil data dari table access_datas
