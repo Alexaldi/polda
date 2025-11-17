@@ -13,10 +13,7 @@ class InstitutionTableSeeder extends Seeder
     public function run(): void
     {
         $items = [
-            ['name' => 'Polda Metro Jaya', 'type' => 'polda'],
             ['name' => 'Polda Jawa Barat', 'type' => 'polda'],
-            ['name' => 'Polres Jakarta Selatan', 'type' => 'polres'],
-            ['name' => 'Polres Bandung', 'type' => 'polres'],
         ];
 
         foreach ($items as $item) {

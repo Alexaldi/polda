@@ -14,14 +14,10 @@ class ReportCategorySeeder extends Seeder
     {
         $categories = [
             'Kriminal Umum',
-            'Lalu Lintas',
             'Narkoba',
             'Korupsi',
             'Cyber Crime',
             'Kekerasan',
-            'Kebakaran',
-            'Bencana Alam',
-            'Kehilangan',
             'Penipuan',
             'Pencurian',
         ];
