@@ -109,3 +109,10 @@
         padding: 10px 5px;
     }
 </style>
+<style>
+    /* Navbar Theme Icons visibility based on theme version */
+    body[data-theme-version="dark"] #icon-light { display: none !important; }
+    body[data-theme-version="dark"] #icon-dark { display: inline !important; }
+    body[data-theme-version="light"] #icon-dark { display: none !important; }
+    body[data-theme-version="light"] #icon-light { display: inline !important; }
+</style>

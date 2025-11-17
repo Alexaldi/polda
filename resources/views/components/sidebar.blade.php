@@ -30,15 +30,15 @@
                         <li><a href="{{ route('institutions.index')}}">Institusi</a></li>
                     </ul>
                 </li>
-                <li>
-                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="material-symbols-outlined">assessment</i>
-                        <span class="nav-text">Laporan</span>
+                <li><a href="{{ route('pelaporan.index') }}" class="" aria-expanded="false">
+                        <i class="material-symbols-outlined">lab_profile</i>
+                        <span class="nav-text">Pelaporan</span>
                     </a>
-                    <ul aria-expanded="false">
-                        <li><a href="{{ route('pelaporan.index') }}">Pelaporan</a></li>
-                        <li><a href="{{ route('report-data.index') }}">Report Data</a></li>
-                    </ul>
+                </li>
+                <li><a href="{{ route('report-data.index') }}" class="" aria-expanded="false">
+                        <i class="material-symbols-outlined">assessment</i>
+                        <span class="nav-text">Report Pelaporan</span>
+                    </a>
                 </li>
             </ul>
         </div>

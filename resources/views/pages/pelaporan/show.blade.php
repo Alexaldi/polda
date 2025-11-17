@@ -1,88 +1,214 @@
 @extends('layouts.dashboard')
 
 @section('content')
-<div class="container-fluid py-4">
+<div class="container-fluid">
     <div class="row justify-content-center">
-        <div class="col-xl-8 col-lg-10">
+        <div class="col-xl-12 col-lg-12">
             <div class="card shadow-sm border-0 report-detail-card">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <a href="{{ route('pelaporan.index') }}" class="btn btn-light text-primary btn-sm">
-                        <i class="fa fa-arrow-left me-1"></i> Kembali
-                    </a>
-                    <h5 class="text-white mb-0">Detail Laporan Pelanggaran</h5>
-                    <button class="btn btn-light text-primary btn-sm" data-bs-toggle="modal" data-bs-target="#journeyModal">
-                        <i class="fa fa-plus me-1"></i> Tambah Tahapan Penanganan
-                    </button>
-                </div>
-
                 <div class="card-body report-detail-body">
                     @php
-                        // dd($report);
                         $incidentAt   = $report->incident_datetime?->format('d M Y H:i');
                         $finishedAt   = $report->finish_time?->format('d M Y H:i');
                         $categoryName = $report->category?->name;
                         $provinceName = $report->province?->name;
                         $cityName     = $report->city?->name;
                         $districtName = $report->district?->name;
-                        $suspectName  = $report->suspects?->pluck('name')->join(', ');
-                        $description   = $report->suspects?->pluck('description')->join(', ');
                     @endphp
 
-                    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
-                        <div>
-                            <h4 class="mb-2">{{ $report->title }}</h4>
-                            <div class="d-flex flex-wrap align-items-center gap-2">
-                                <span class="badge bg-body-secondary text-body">Kode: {{ $report->code ?? '-' }}</span>
-                                <span class="badge bg-primary-subtle text-primary text-uppercase">Status: {{ $statusLabel ?? '-' }}</span>
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-detail" type="button" role="tab">
+                                <i class="fa fa-file-alt me-2"></i>Detail Laporan
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-progress" type="button" role="tab">
+                                <i class="fa fa-tasks me-2"></i>Update Progress
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-timeline" type="button" role="tab">
+                                <i class="fa fa-clock me-2"></i>Timeline
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content pt-4">
+                        <div class="tab-pane fade show active" id="tab-detail" role="tabpanel">
+                            <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+                                <div>
+                                    <h4 class="mb-2">{{ $report->title }}</h4>
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <span class="badge bg-body-secondary text-body">Kode: {{ $report->code ?? '-' }}</span>
+                                        <span class="badge bg-primary-subtle text-primary text-uppercase">Status: {{ $statusLabel ?? '-' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <h6 class="fw-semibold">Data Identitas Pelapor</h6>
+                                </div>
+                                <div class="col-md-4"><p class="mb-1"><strong>Nama Pelapor:</strong> {{ $report->reporter_name ?? '-' }}</p></div>
+                                <div class="col-md-4"><p class="mb-1"><strong>Alamat Pelapor:</strong> {{ $report->reporter_address ?? '-' }}</p></div>
+                                <div class="col-md-4"><p class="mb-1"><strong>No Telepon Pelapor:</strong> {{ $report->reporter_phone ?? '-' }}</p></div>
+                                <div class="col-12"><hr></div>
+                                <div class="col-12">
+                                    <h6 class="fw-semibold">Data Laporan</h6>
+                                </div>
+                                <div class="col-md-6"><p class="mb-1"><strong>Judul Laporan:</strong> {{ $report->title ?? '-' }}</p></div>
+                                <div class="col-md-6"><p class="mb-1"><strong>Kategori Laporan:</strong> {{ $categoryName ?? '-' }}</p></div>
+                                <div class="col-md-6"><p class="mb-1"><strong>Kronologi:</strong> {!! nl2br(e($report->description)) !!}</p></div>
+                                <div class="col-md-6"><p class="mb-1"><strong>Tanggal:</strong> {{ $incidentAt ?? '-' }}</p></div>
+                                <div class="col-md-6"><p class="mb-1"><strong>Kota:</strong> {{ $cityName ?? '-' }}</p></div>
+                                <div class="col-12"><hr></div>
+                                <div class="col-12 d-flex align-items-center justify-content-between">
+                                    <h6 class="fw-semibold mb-0">Data Identitas Terlapor</h6>
+                                </div>
+                                <div class="col-12">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Nama</th>
+                                                <th>Alamat</th>
+                                                <th>Telepon</th>
+                                                <th>Jenis Satuan</th>
+                                                <th>Satker/Satwil</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($report->suspects ?? [] as $suspect)
+                                                <tr>
+                                                    <td>{{ $suspect->name ?? '-' }}</td>
+                                                    <td>{{ $suspect->address ?? '-' }}</td>
+                                                    <td>{{ $suspect->phone ?? '-' }}</td>
+                                                    <td>{{ $suspect->unit_type ?? '-' }}</td>
+                                                    <td>{{ $suspect->satker_name ?? $suspect->satwil_name ?? '-' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <a href="{{ route('pelaporan.index') }}" class="btn btn-warning mt-3">Kembali</a>
+                        </div>
+
+                        <div class="tab-pane fade" id="tab-progress" role="tabpanel">
+                            <div class="row g-3">
+                                <div class="col-12"><h6 class="fw-semibold">Upload Document Pemeriksaan</h6></div>
+                                <div class="col-md-4">
+                                    <label class="form-label">No Dokumen Pemeriksaan</label>
+                                    <input type="text" class="form-control" placeholder="Masukkan nomor dokumen">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Tanggal Dokumen Pemeriksaan</label>
+                                    <input type="date" class="form-control">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Upload File</label>
+                                    <input type="file" class="form-control" multiple>
+                                </div>
+                                <div class="col-12"><hr></div>
+                                <div class="col-12"><h6 class="fw-semibold">Input Kesimpulan Gelar Perkara</h6></div>
+                                <div class="col-12">
+                                    <textarea class="form-control" rows="4" placeholder="Tuliskan kesimpulan"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-12"><hr></div>
+
+                            <div class="row g-3">
+                                <div class="col-12 d-flex align-items-center justify-content-between">
+                                    <h6 class="fw-semibold mb-0">Administrasi Penyidikan</h6>
+                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#adminDocModal">Tambah Dokumen</button>
+                                </div>
+                                <div class="col-12">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Nama Dokumen</th>
+                                                <th>No Dokumen</th>
+                                                <th>Tanggal Dokumen</th>
+                                                <th>Berkas</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="adminDocTableBody"></tbody>
+                                    </table>
+                                    <div id="adminDocHiddenInputs" style="display:none"></div>
+                                </div>
+
+                                <div class="col-12"><h6 class="fw-semibold">Upload Dokumen Sidang</h6></div>
+                                <div class="col-md-4">
+                                    <label class="form-label">No Dokumen Sidang</label>
+                                    <input type="text" class="form-control" placeholder="Masukkan nomor dokumen">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Tanggal Dokumen Sidang</label>
+                                    <input type="date" class="form-control">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Upload File</label>
+                                    <input type="file" class="form-control" multiple>
+                                </div>
+
+                                <div class="col-12"><h6 class="fw-semibold">Putusan</h6></div>
+                                <div class="col-12">
+                                    <textarea class="form-control" rows="4" placeholder="Tuliskan putusan"></textarea>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-success mt-3">Simpan dan Selesai</button>
+                                    <button type="submit" class="btn btn-info mt-3">Simpan dan Limpah</button>
+                                    <a href="{{ route('pelaporan.index') }}" class="btn btn-warning mt-3">Kembali</a>
+                                </div>
                             </div>
                         </div>
-                        <div class="text-md-end">
-                            <p class="mb-1"><strong>Kategori:</strong> {{ $categoryName ?? '-' }}</p>
-                            <p class="mb-0"><strong>Lokasi:</strong> {{ $report->address_detail ?? '-' }}</p>
+
+                        <div class="tab-pane fade" id="tab-timeline" role="tabpanel">
+                            <h5 class="mt-1 mb-3"><i class="fa fa-route me-2"></i>Timeline Penanganan</h5>
+                            @include('components.timeline', ['items' => $journeys])
                         </div>
                     </div>
-
-                    @php
-                        $metadata = [
-                            ['label' => 'Nama Terlapor', 'value' => $suspectName ?? '-'],
-                            ['label' => 'Deskripsi Terlapor', 'value' => $description ?? '-'],
-                            ['label' => 'Status', 'value' => $report->status ?? '-'],
-                            ['label' => 'Provinsi', 'value' => $provinceName ?? '-'],
-                            ['label' => 'Waktu Kejadian', 'value' => $incidentAt ?? '-'],
-                            ['label' => 'Kota/Kabupaten', 'value' => $cityName ?? '-'],
-                            ['label' => 'Waktu Selesai', 'value' => $finishedAt ?? '-'],
-                            ['label' => 'Kecamatan', 'value' => $districtName ?? '-'],
-                        ];
-                    @endphp
-
-                    <div class="row g-3">
-                        @foreach($metadata as $item)
-                            <div class="col-md-6">
-                                <p class="mb-1">
-                                    <strong>{{ $item['label'] }}:</strong> {{ $item['value'] }}
-                                </p>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    <div class="mt-3">
-                        <h6 class="fw-semibold mb-2">Deskripsi Laporan</h6>
-                        <p class="mb-0">{!! nl2br(e($report->description)) !!}</p>
-                    </div>
-
-                    <hr>
-                    <h5 class="mt-4 mb-3">
-                        <i class="fa fa-route me-2"></i>Timeline Penanganan
-                    </h5>
-
-                    @include('components.timeline', ['items' => $journeys])
-
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<div class="modal fade" id="adminDocModal" tabindex="-1" aria-labelledby="adminDocModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="adminDocModalLabel">Input Dokumen</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Nama Dokumen</label>
+          <input type="text" class="form-control" id="admin-doc-name">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">No Dokumen</label>
+          <input type="text" class="form-control" id="admin-doc-number">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Tanggal Dokumen</label>
+          <input type="date" class="form-control" id="admin-doc-date">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Upload File</label>
+          <input type="file" class="form-control" id="admin-doc-file" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-primary" id="admin-doc-save">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
 {{-- Journey Modal --}}
 <div class="modal fade" id="journeyModal" tabindex="-1" aria-labelledby="journeyModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -244,4 +370,78 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var adminIndex = 0;
+  var bodyEl = document.getElementById('adminDocTableBody');
+  var hiddenEl = document.getElementById('adminDocHiddenInputs');
+  var saveBtn = document.getElementById('admin-doc-save');
+
+  function appendAdminRow(data, fileInputEl) {
+    var rowId = 'admin-doc-row-' + adminIndex;
+    var fileName = fileInputEl && fileInputEl.files && fileInputEl.files[0] ? fileInputEl.files[0].name : '-';
+    var tr = document.createElement('tr');
+    tr.id = rowId;
+    tr.innerHTML = '<td>' + (data.name || '-') + '</td>' +
+                   '<td>' + (data.number || '-') + '</td>' +
+                   '<td>' + (data.date || '-') + '</td>' +
+                   '<td>' + fileName + '</td>' +
+                   '<td><button type="button" class="btn btn-danger btn-sm" data-row="' + rowId + '">Hapus</button></td>';
+    bodyEl.appendChild(tr);
+
+    var hidden = document.createElement('div');
+    hidden.id = 'hidden-' + rowId;
+    hidden.innerHTML = '' +
+      '<input type="hidden" name="admin_documents[' + adminIndex + '][name]" value="' + (data.name || '') + '">' +
+      '<input type="hidden" name="admin_documents[' + adminIndex + '][number]" value="' + (data.number || '') + '">' +
+      '<input type="hidden" name="admin_documents[' + adminIndex + '][date]" value="' + (data.date || '') + '">';
+    if (fileInputEl) {
+      fileInputEl.name = 'admin_documents[' + adminIndex + '][file]';
+      fileInputEl.style.display = 'none';
+      hidden.appendChild(fileInputEl);
+    }
+    hiddenEl.appendChild(hidden);
+    adminIndex++;
+  }
+
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function() {
+      var nameEl = document.getElementById('admin-doc-name');
+      var numberEl = document.getElementById('admin-doc-number');
+      var dateEl = document.getElementById('admin-doc-date');
+      var fileEl = document.getElementById('admin-doc-file');
+      var data = {
+        name: (nameEl.value || '').trim(),
+        number: (numberEl.value || '').trim(),
+        date: (dateEl.value || '').trim()
+      };
+      if (!data.name) return;
+      appendAdminRow(data, fileEl);
+      var modalEl = document.getElementById('adminDocModal');
+      bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+      nameEl.value = '';
+      numberEl.value = '';
+      dateEl.value = '';
+      var freshFile = document.createElement('input');
+      freshFile.type = 'file';
+      freshFile.className = 'form-control';
+      freshFile.id = 'admin-doc-file';
+      freshFile.accept = '.jpg,.jpeg,.png,.pdf,.doc,.docx';
+      fileEl.replaceWith(freshFile);
+    });
+  }
+
+  if (bodyEl) {
+    bodyEl.addEventListener('click', function(e) {
+      var btn = e.target.closest('button.btn-danger');
+      if (!btn) return;
+      var rowId = btn.getAttribute('data-row');
+      var row = document.getElementById(rowId);
+      var hidden = document.getElementById('hidden-' + rowId);
+      if (row) row.remove();
+      if (hidden) hidden.remove();
+    });
+  }
+});
+</script>
 @endsection

@@ -58,12 +58,45 @@
 </script>
 
 <script>
-    jQuery(document).ready(function(){
-        setTimeout(function(){
-            dlabSettingsOptions.version = 'dark';
-            new dlabSettings(dlabSettingsOptions);
-            setCookie('version','dark');
-        },1500)
+    jQuery(function($){
+        function readPref(){
+            var ls = null;
+            try { ls = localStorage.getItem('theme-version'); } catch(e) {}
+            if (ls) return ls;
+            var m = document.cookie.match(/(?:^|; )version=([^;]+)/);
+            return m ? decodeURIComponent(m[1]) : null;
+        }
+        function persist(version){
+            try { localStorage.setItem('theme-version', version); } catch(e) {}
+            if (typeof setCookie === 'function') {
+                setCookie('version', version);
+            } else {
+                document.cookie = 'version=' + version + '; path=/; max-age=' + (60*60*24*365);
+            }
+        }
+        function apply(version){
+            if (typeof dlabSettingsOptions !== 'undefined') {
+                dlabSettingsOptions.version = version;
+                new dlabSettings(dlabSettingsOptions);
+            }
+            $('body').attr('data-theme-version', version);
+            if (version === 'dark') {
+                $('#icon-dark').show();
+                $('#icon-light').hide();
+            } else {
+                $('#icon-dark').hide();
+                $('#icon-light').show();
+            }
+        }
+        var pref = readPref() || 'light';
+        apply(pref);
+        $(document).on('click','.dz-theme-mode',function(e){
+            e.preventDefault();
+            var current = $('body').attr('data-theme-version') || pref;
+            var next = current === 'dark' ? 'light' : 'dark';
+            apply(next);
+            persist(next);
+        });
     });
 </script>
 
