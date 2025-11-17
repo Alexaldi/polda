@@ -16,6 +16,8 @@ class Division extends Model
      */
     protected $fillable = [
         'parent_id',
+        'level',
+        'permissions',
         'name',
         'type',
     ];

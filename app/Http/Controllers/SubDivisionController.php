@@ -57,8 +57,27 @@ class SubDivisionController extends Controller
             $data = [];
             foreach ($subdivisions as $key => $subdivision) {
                 $parentName = $subdivision->parent ? $subdivision->parent->name : '-';
+                $permissions = [];
+                if (!empty($subdivision->permissions)) {
+                    $decoded = json_decode($subdivision->permissions, true);
+                    if (is_array($decoded)) {
+                        $permissions = $decoded;
+                    }
+                }
+
                 $htmlButton = '
                     <td class="text-nowrap">
+                        <a href="javascript:void(0);" 
+                           class="btn btn-info btn-sm content-icon btn-detail"
+                           data-id="' . $subdivision->id . '"
+                           data-name="' . htmlspecialchars($subdivision->name, ENT_QUOTES) . '"
+                           data-parent="' . htmlspecialchars($parentName, ENT_QUOTES) . '"
+                           data-level="' . htmlspecialchars(strtolower($subdivision->level ?? ''), ENT_QUOTES) . '"
+                           data-type="' . htmlspecialchars($subdivision->type ?? '', ENT_QUOTES) . '"
+                           data-permissions="' . htmlspecialchars(json_encode($permissions), ENT_QUOTES) . '"
+                           data-created_at="' . htmlspecialchars($subdivision->created_at?->format('d-m-Y H:i') ?? '-', ENT_QUOTES) . '">
+                            <i class="fa fa-eye"></i>
+                        </a>
                         <a href="' . route('subdivisions.edit', $subdivision->id) . '" class="btn btn-warning btn-sm content-icon">
                             <i class="fa fa-edit"></i>
                         </a>
@@ -102,13 +121,26 @@ class SubDivisionController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|unique:divisions,name',
-            'type' => 'required',
-            'parent_id' => 'required|exists:divisions,id',
+            'level' => 'required|string|in:polda,polres,polsek',
+            'type' => 'required|string|in:satker,satwil',
+            'permissions.inspection' => 'nullable|boolean',
+            'permissions.investigation' => 'nullable|boolean',
         ]);
 
-        $result = $this->service->store($request->only(['name', 'type', 'parent_id']));
+        $data = [
+            'parent_id' => $request->input('parent_id'),
+            'name' => $validated['name'],
+            'level' => strtolower($validated['level']),
+            'type' => $validated['type'],
+            'permissions' => json_encode([
+                'inspection' => (bool) ($request->input('permissions.inspection') ?? false),
+                'investigation' => (bool) ($request->input('permissions.investigation') ?? false),
+            ]),
+        ];
+
+        $result = $this->service->store($data);
 
         if ($result['status']) {
             return redirect()->route('subdivisions.index')->with('success', $result['message']);
@@ -131,13 +163,27 @@ class SubDivisionController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
+            'parent_id' => 'required|integer|exists:divisions,id',
             'name' => 'required|unique:divisions,name,' . $id,
-            'type' => 'required',
-            'parent_id' => 'required|exists:divisions,id',
+            'level' => 'required|string|in:polda,polres,polsek',
+            'type' => 'required|string|in:satker,satwil',
+            'permissions.inspection' => 'nullable|boolean',
+            'permissions.investigation' => 'nullable|boolean',
         ]);
 
-        $result = $this->service->update($id, $request->only(['name', 'type', 'parent_id']));
+        $data = [
+            'parent_id' => $validated['parent_id'],
+            'name' => $validated['name'],
+            'level' => strtolower($validated['level']),
+            'type' => $validated['type'],
+            'permissions' => json_encode([
+                'inspection' => (bool) ($request->input('permissions.inspection') ?? false),
+                'investigation' => (bool) ($request->input('permissions.investigation') ?? false),
+            ]),
+        ];
+
+        $result = $this->service->update($id, $data);
 
         if ($result['status']) {
             return redirect()->route('subdivisions.index')->with('success', $result['message']);

@@ -19,16 +19,10 @@
                         <li><a href="{{ route('permissions.index') }}">Permission</a></li>
                     </ul>
                 </li>
-                <li>
-                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                <li><a href="{{ route('subdivisions.index') }}" class="" aria-expanded="false">
                         <i class="material-symbols-outlined">lab_profile</i>
-                        <span class="nav-text">Internal Data</span>
+                        <span class="nav-text">Unit</span>
                     </a>
-                    <ul aria-expanded="false">
-                        <li><a href="{{ route('divisions.index') }}">Sub Bagian</a></li>
-                        <li><a href="{{ route('subdivisions.index')}}">Unit</a></li>
-                        <li><a href="{{ route('institutions.index')}}">Institusi</a></li>
-                    </ul>
                 </li>
                 <li><a href="{{ route('pelaporan.index') }}" class="" aria-expanded="false">
                         <i class="material-symbols-outlined">lab_profile</i>

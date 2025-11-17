@@ -10,9 +10,7 @@ class SubDivisionRepository implements SubDivisionRepositoryInterface
     // Query untuk DataTables
     public function getDataTableQuery()
     {
-        return Division::with('parent')
-        ->whereNotNull('parent_id')
-        ->select(['id', 'name', 'type', 'parent_id', 'created_at']);
+        return Division::with('parent')->orderBy('created_at', 'desc');
     }
 
     // Mengembalikan semua division diurutkan berdasarkan nama

@@ -116,6 +116,81 @@ jQuery(function($) {
         $('#filter_q').val('');
         table.draw();
     });
+
+    $(document).on('click', '.btn-detail', function() {
+        var btn = $(this);
+        var data = {
+            id: btn.data('id'),
+            name: btn.data('name') || '-',
+            parent: btn.data('parent') || '-',
+            level: (btn.data('level') || '-').toString().toUpperCase(),
+            type: btn.data('type') || '-',
+            created_at: btn.data('created_at') || '-',
+            permissions: {}
+        };
+        try {
+            var permsStr = btn.attr('data-permissions') || '{}';
+            data.permissions = JSON.parse(permsStr);
+        } catch (e) {
+            data.permissions = {};
+        }
+
+        $('#detail-name').text(data.name);
+        $('#detail-parent').text(data.parent);
+        $('#detail-level').text(data.level);
+        $('#detail-type').text(data.type);
+        $('#detail-created').text(data.created_at);
+        $('#detail-perm-inspection').text(data.permissions && data.permissions.inspection ? 'Ya' : 'Tidak');
+        $('#detail-perm-investigation').text(data.permissions && data.permissions.investigation ? 'Ya' : 'Tidak');
+
+        var modalEl = document.getElementById('subdivisionDetailModal');
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    });
 });
 </script>
+<div class="modal fade" id="subdivisionDetailModal" tabindex="-1" aria-labelledby="subdivisionDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="subdivisionDetailModalLabel">Detail Unit</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Nama Unit</label>
+            <div id="detail-name">-</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Unit Induk</label>
+            <div id="detail-parent">-</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Level</label>
+            <div id="detail-level">-</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Tipe</label>
+            <div id="detail-type">-</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Inspection</label>
+            <div id="detail-perm-inspection">-</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Investigation</label>
+            <div id="detail-perm-investigation">-</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Dibuat</label>
+            <div id="detail-created">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
 @endsection
