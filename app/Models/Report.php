@@ -50,7 +50,7 @@ class Report extends Model
 
                 return Carbon::parse($value);
             },
-            set: fn ($value) => $value ? Carbon::parse($value)->timestamp : null,
+            set: fn ($value) => $value ? Carbon::parse($value)->toDateTimeString() : null,
         );
     }
 

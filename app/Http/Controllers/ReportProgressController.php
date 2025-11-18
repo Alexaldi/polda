@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
 
 class ReportProgressController extends Controller
 {
@@ -26,7 +27,26 @@ class ReportProgressController extends Controller
         $action = $request->input('action');
         $flow = $request->input('flow', 'inspection');
 
-        $validated = $request->validate([
+        $hasAccess = $division
+            ? $report->accessDatas()
+                ->where('division_id', $division->id)
+                ->where('is_finish', false)
+                ->exists()
+            : false;
+
+        if (!$hasAccess) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk mengupdate progress laporan ini.');
+        }
+
+        if ($flow === 'inspection' && !$division?->canInspection()) {
+            return back()->with('error', 'Divisi Anda tidak dapat melakukan pemeriksaan.');
+        }
+
+        if ($flow === 'investigation' && !$division?->canInvestigation()) {
+            return back()->with('error', 'Divisi Anda tidak dapat melakukan penyidikan.');
+        }
+
+        $validator = Validator::make($request->all(), [
             'action' => ['required', Rule::in(['save', 'complete', 'transfer'])],
             'flow' => ['required', Rule::in(['inspection', 'investigation'])],
 
@@ -61,6 +81,71 @@ class ReportProgressController extends Controller
             ],
         ]);
 
+        $validator->after(function ($validator) use ($request, $action, $flow) {
+            if ($flow === 'inspection' && in_array($action, ['complete', 'transfer', 'save'], true)) {
+                if (!$request->filled('inspection_doc_number')) {
+                    $validator->errors()->add('inspection_doc_number', 'Nomor dokumen pemeriksaan wajib diisi.');
+                }
+                if (!$request->filled('inspection_doc_date')) {
+                    $validator->errors()->add('inspection_doc_date', 'Tanggal dokumen pemeriksaan wajib diisi.');
+                }
+                if (!$request->filled('inspection_conclusion')) {
+                    $validator->errors()->add('inspection_conclusion', 'Kesimpulan wajib diisi.');
+                }
+                $inspectionFiles = $request->file('inspection_files', []);
+                $hasInspectionFile = false;
+                foreach ((array) $inspectionFiles as $file) {
+                    if ($file) {
+                        $hasInspectionFile = true;
+                        break;
+                    }
+                }
+                if (!$hasInspectionFile) {
+                    $validator->errors()->add('inspection_files', 'Minimal satu file pemeriksaan harus diunggah.');
+                }
+            }
+
+            foreach ($request->input('admin_documents', []) as $idx => $doc) {
+                $file = $request->file("admin_documents.$idx.file");
+                if (!($doc['name'] ?? null)) {
+                    $validator->errors()->add("admin_documents.$idx.name", 'Nama dokumen administrasi wajib diisi.');
+                }
+                if (!$file) {
+                    $validator->errors()->add("admin_documents.$idx.file", 'File dokumen administrasi wajib diunggah.');
+                }
+                if (!($doc['number'] ?? null)) {
+                    $validator->errors()->add("admin_documents.$idx.number", 'Nomor dokumen administrasi wajib diisi.');
+                }
+                if (!($doc['date'] ?? null)) {
+                    $validator->errors()->add("admin_documents.$idx.date", 'Tanggal dokumen administrasi wajib diisi.');
+                }
+            }
+
+            $requiresTrial = $flow === 'investigation' && (
+                $action === 'complete'
+                || $request->filled('trial_doc_number')
+                || $request->filled('trial_doc_date')
+                || $request->file('trial_file')
+                || $request->filled('trial_decision')
+            );
+
+            if ($requiresTrial) {
+                foreach (['trial_doc_number' => 'Nomor dokumen sidang wajib diisi.',
+                             'trial_doc_date' => 'Tanggal dokumen sidang wajib diisi.',
+                             'trial_decision' => 'Putusan sidang wajib diisi.'] as $field => $message) {
+                    if (!$request->filled($field)) {
+                        $validator->errors()->add($field, $message);
+                    }
+                }
+                if (!$request->file('trial_file')) {
+                    $validator->errors()->add('trial_file', 'File dokumen sidang wajib diunggah.');
+                }
+            }
+        });
+
+        $validator->validate();
+        $validated = $validator->validated();
+
         $inspectionFiles = $request->file('inspection_files', []);
         $inspectionFiles = is_array($inspectionFiles) ? $inspectionFiles : [$inspectionFiles];
 
@@ -78,12 +163,8 @@ class ReportProgressController extends Controller
         $divisionId = $division?->id;
         $institutionId = $user?->institution_id;
 
-        if ($flow === 'inspection' && !$division?->canInspection()) {
-            return back()->with('error', 'Divisi Anda tidak dapat melakukan pemeriksaan.');
-        }
-
-        if ($flow === 'investigation' && !$division?->canInvestigation()) {
-            return back()->with('error', 'Divisi Anda tidak dapat melakukan penyidikan.');
+        if ($flow === 'investigation' && $action === 'transfer') {
+            return back()->with('error', 'Tahapan penyidikan tidak mendukung limpah.');
         }
 
         if ($action === 'transfer' && $flow === 'inspection') {

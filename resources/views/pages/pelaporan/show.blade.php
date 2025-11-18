@@ -13,10 +13,10 @@
                         $provinceName = $report->province?->name;
                         $cityName     = $report->city?->name;
                         $districtName = $report->district?->name;
-                        $user = auth()->user();
-                        $division = $user?->division;
-                        $canInspection = $division?->canInspection() ?? false;
-                        $canInvestigation = $division?->canInvestigation() ?? false;
+                        $canInspection = $canInspection ?? false;
+                        $canInvestigation = $canInvestigation ?? false;
+                        $hasAccess = $hasAccess ?? false;
+                        $showProgressTab = $hasAccess && ($canInspection || $canInvestigation) && $report->status !== \App\Enums\ReportJourneyType::COMPLETED->value;
                     @endphp
 
                     <ul class="nav nav-tabs" role="tablist">
@@ -25,7 +25,7 @@
                                 <i class="fa fa-file-alt me-2"></i>Detail Laporan
                             </button>
                         </li>
-                        @if($report->status !== \App\Enums\ReportJourneyType::COMPLETED->value)
+                        @if($showProgressTab)
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-progress" type="button" role="tab">
                                     <i class="fa fa-tasks me-2"></i>Update Progress
@@ -104,9 +104,11 @@
                             <a href="{{ route('pelaporan.index') }}" class="btn btn-warning mt-3">Kembali</a>
                         </div>
 
-                        @if($report->status !== \App\Enums\ReportJourneyType::COMPLETED->value)
+                        @if($showProgressTab)
                         <div class="tab-pane fade" id="tab-progress" role="tabpanel">
-                            @if(!$canInspection && !$canInvestigation)
+                            @if(!$hasAccess)
+                                <div class="alert alert-warning mb-0">Anda tidak memiliki akses untuk mengupdate progress laporan ini.</div>
+                            @elseif(!$canInspection && !$canInvestigation)
                                 <div class="alert alert-warning mb-0">Anda tidak memiliki akses untuk mengupdate progress laporan ini.</div>
                             @else
                                 <form id="progressForm" action="{{ route('reports.progress.store', $report->id) }}" method="POST" enctype="multipart/form-data">
@@ -484,23 +486,6 @@ document.addEventListener('DOMContentLoaded', function() {
     fresh.accept = '.jpg,.jpeg,.png,.pdf,.doc,.docx';
     existing.replaceWith(fresh);
     return fresh;
-  }
-
-  function removePlaceholder() {
-    var placeholder = bodyEl ? bodyEl.querySelector('.admin-placeholder') : null;
-    if (placeholder) {
-      placeholder.remove();
-    }
-  }
-
-  function addPlaceholderIfEmpty() {
-    if (!bodyEl) return;
-    var hasRow = bodyEl.querySelector('tr');
-    if (hasRow) return;
-    var placeholder = document.createElement('tr');
-    placeholder.className = 'admin-placeholder';
-    placeholder.innerHTML = '<td colspan="5" class="text-center">Belum ada dokumen administrasi</td>';
-    bodyEl.appendChild(placeholder);
   }
 
   function appendAdminRow(data, fileInputEl) {

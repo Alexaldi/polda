@@ -235,10 +235,12 @@ class ReportJourneyService
             } else {
                 if ($canSkipInspection && $lastType === ReportJourneyType::SUBMITTED) {
                     $lastType = ReportJourneyType::INVESTIGATION;
+                } elseif (!$this->validInvestigationEntry($lastType)) {
+                    throw new RuntimeException('Urutan tahapan tidak valid untuk Administrasi Penyidikan.');
                 }
 
                 foreach ($data['admin_documents'] ?? [] as $index => $doc) {
-                    if (!$this->validInvestigationFlow($lastType)) {
+                    if (!$this->validFlow($lastType, ReportJourneyType::INVESTIGATION)) {
                         throw new RuntimeException('Urutan tahapan tidak valid untuk Administrasi Penyidikan.');
                     }
 
@@ -259,7 +261,9 @@ class ReportJourneyService
                     $lastType = ReportJourneyType::INVESTIGATION;
                 }
 
-                if (!empty($data['trial_doc_number']) || !empty($files['trial_file']) || !empty($data['trial_decision'])) {
+                $needsTrial = !empty($data['trial_doc_number']) || !empty($files['trial_file']) || !empty($data['trial_decision']) || $action === 'complete';
+
+                if ($needsTrial) {
                     if (!$this->validFlow($lastType, ReportJourneyType::TRIAL)) {
                         throw new RuntimeException('Tidak bisa SIDANG karena status terakhir belum tahap penyidikan.');
                     }
@@ -413,25 +417,21 @@ class ReportJourneyService
 
     private function validInspectionStart(ReportJourneyType $lastType): bool
     {
-        return in_array($lastType, [ReportJourneyType::SUBMITTED, ReportJourneyType::INVESTIGATION], true);
+        return $lastType === ReportJourneyType::SUBMITTED;
     }
 
-    private function validInvestigationFlow(ReportJourneyType $lastType): bool
+    private function validInvestigationEntry(ReportJourneyType $lastType): bool
     {
-        return in_array($lastType, [
-            ReportJourneyType::INVESTIGATION,
-            ReportJourneyType::SUBMITTED,
-            ReportJourneyType::TRANSFER,
-        ], true);
+        return in_array($lastType, [ReportJourneyType::INVESTIGATION, ReportJourneyType::TRANSFER], true);
     }
 
     private function validFlow(ReportJourneyType $lastType, ReportJourneyType $currentType): bool
     {
         return match ($currentType) {
-            ReportJourneyType::INVESTIGATION => $lastType !== ReportJourneyType::COMPLETED,
+            ReportJourneyType::INVESTIGATION => in_array($lastType, [ReportJourneyType::INVESTIGATION, ReportJourneyType::TRANSFER, ReportJourneyType::SUBMITTED], true),
             ReportJourneyType::TRANSFER => $lastType === ReportJourneyType::INVESTIGATION,
             ReportJourneyType::TRIAL => $lastType === ReportJourneyType::INVESTIGATION,
-            ReportJourneyType::COMPLETED => $lastType !== ReportJourneyType::COMPLETED,
+            ReportJourneyType::COMPLETED => in_array($lastType, [ReportJourneyType::INVESTIGATION, ReportJourneyType::TRANSFER, ReportJourneyType::TRIAL], true),
             default => false,
         };
     }
