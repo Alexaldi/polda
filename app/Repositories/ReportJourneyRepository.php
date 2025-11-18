@@ -17,10 +17,9 @@ class ReportJourneyRepository implements ReportJourneyRepositoryInterface
     {
         $direction = strtolower($order) === 'asc' ? 'asc' : 'desc';
 
-        return ReportJourney::query()
-            ->with('evidences')
-            ->where('report_id', $reportId)
-            ->orderBy('created_at', $direction)
+        return ReportJourney::where('report_id', $reportId)
+            ->with(['division', 'evidences'])
+            ->orderBy('id', $order)
             ->paginate($perPage);
     }
 }

@@ -112,90 +112,109 @@ class ReportJourneyService
             return false;
         }
 
-        return $report->accessDatas()
+        // 1. Active accessDatas
+        $hasActive = $report->accessDatas()
             ->where('division_id', $division->id)
             ->where('is_finish', false)
             ->exists();
+
+        if ($hasActive) {
+            return true;
+        }
+
+        // 2. Creator always has access until complete
+        if (
+            $report->creator
+            && $report->creator->division_id === $division->id
+            && $report->status !== ReportJourneyType::COMPLETED->value
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     public function store(array $data, array $files = []): array
     {
-        DB::beginTransaction();
+            DB::beginTransaction();
 
-        try {
-            $type = $this->normalizeType($data['type'] ?? null);
-            $reportId = (int) ($data['report_id'] ?? 0);
+            try {
+                $type = $this->normalizeType($data['type'] ?? null);
+                $reportId = (int) ($data['report_id'] ?? 0);
 
-            if (!$type || $reportId <= 0) {
-                throw new RuntimeException('Data tahapan tidak lengkap.');
+                if (!$type || $reportId <= 0) {
+                    throw new RuntimeException('Data tahapan tidak lengkap.');
+                }
+
+                $report = Report::findOrFail($reportId);
+
+                $description = [
+                    'text' => $data['description'] ?? '',
+                    'institution_target_id' => $data['institution_target_id'] ?? null,
+                    'division_target_id' => $data['division_target_id'] ?? null,
+                ];
+
+                $journey = $this->createJourney(
+                    $report,
+                    $type,
+                    $description,
+                    $files,
+                    $data['division_id'] ?? null,
+                    $data['institution_id'] ?? null
+                );
+
+                if ($type === ReportJourneyType::TRANSFER) {
+                    $this->handleTransferAccess($report, $data['division_id'] ?? null, $journey->target_division_id);
+                }
+
+                if ($type === ReportJourneyType::COMPLETED) {
+                    $this->finishAccess($report);
+                }
+
+                $this->notificationService->notifyReportStatus($journey->report, $type->value);
+
+                DB::commit();
+
+                return [
+                    'status' => true,
+                    'message' => 'Tahapan penanganan berhasil ditambahkan',
+                    'data' => $journey,
+                ];
+            } catch (Throwable $throwable) {
+                DB::rollBack();
+                report($throwable);
+
+                return [
+                    'status' => false,
+                    'message' => 'Gagal menambahkan tahapan penanganan.',
+                ];
             }
-
-            $report = Report::findOrFail($reportId);
-
-            $description = [
-                'text' => $data['description'] ?? '',
-                'institution_target_id' => $data['institution_target_id'] ?? null,
-                'division_target_id' => $data['division_target_id'] ?? null,
-            ];
-
-            $journey = $this->createJourney(
-                $report,
-                $type,
-                $description,
-                $files,
-                $data['division_id'] ?? null,
-                $data['institution_id'] ?? null
-            );
-
-            if ($type === ReportJourneyType::TRANSFER) {
-                $this->handleTransferAccess($report, $data['division_id'] ?? null, $journey->target_division_id);
-            }
-
-            if ($type === ReportJourneyType::COMPLETED) {
-                $this->finishAccess($report);
-            }
-
-            $this->notificationService->notifyReportStatus($journey->report, $type->value);
-
-            DB::commit();
-
-            return [
-                'status' => true,
-                'message' => 'Tahapan penanganan berhasil ditambahkan',
-                'data' => $journey,
-            ];
-        } catch (Throwable $throwable) {
-            DB::rollBack();
-            report($throwable);
-
-            return [
-                'status' => false,
-                'message' => 'Gagal menambahkan tahapan penanganan.',
-            ];
         }
-    }
 
-    public function storeProgress(
+        public function storeProgress(
         Report $report,
         array $data,
         array $files,
         ?int $divisionId = null,
         ?int $institutionId = null,
-        ?int $userId = null,
+        ?int $userId = null
     ): array {
+
         DB::beginTransaction();
 
         try {
+            $division = $divisionId ? Division::find($divisionId) : null;
             $lastType = $this->lastJourneyType($report);
             $firstFlow = $this->determineFirstFlow($report);
+
             $flow = $data['flow'] ?? 'inspection';
             $action = $data['action'] ?? 'save';
 
-            $division = $divisionId ? Division::find($divisionId) : null;
-
+            // Force flow berdasarkan capability divisi
             if ($division?->canInspection() && !$division?->canInvestigation()) {
                 $flow = 'inspection';
-            } elseif ($division?->canInvestigation() && !$division?->canInspection()) {
+            }
+            if ($division?->canInvestigation() && !$division?->canInspection()) {
                 $flow = 'investigation';
             }
 
@@ -205,17 +224,25 @@ class ReportJourneyService
 
             $journeys = [];
 
+            /* ===========================================================
+            FLOW 1: INSPECTION
+            =========================================================== */
             if ($flow === 'inspection') {
+
                 if ($firstFlow !== 'inspection') {
-                    throw new RuntimeException('Laporan ini langsung masuk ke penyidikan. Tahap pemeriksaan dilewati.');
+                    throw new RuntimeException('Tahap pemeriksaan dilewati. Laporan langsung ke penyidikan.');
                 }
 
-                if (!in_array($lastType, [ReportJourneyType::SUBMITTED, ReportJourneyType::INVESTIGATION], true)) {
-                    throw new RuntimeException('Tahap pemeriksaan tidak tersedia untuk status laporan saat ini.');
+                if (!in_array($lastType, [
+                    ReportJourneyType::SUBMITTED,
+                    ReportJourneyType::INVESTIGATION
+                ], true)) {
+                    throw new RuntimeException('Tahap pemeriksaan tidak valid untuk status laporan ini.');
                 }
 
                 $touchStatus = $action !== 'save';
 
+                // Create Investigation journey
                 $journeys[] = $this->createJourney(
                     $report,
                     ReportJourneyType::INVESTIGATION,
@@ -229,9 +256,10 @@ class ReportJourneyService
                     $files['inspection_files'] ?? [],
                     $divisionId,
                     $institutionId,
-                    $touchStatus,
+                    $touchStatus
                 );
 
+                /* === Transfer === */
                 if ($action === 'transfer') {
                     $journeys[] = $this->createJourney(
                         $report,
@@ -251,9 +279,14 @@ class ReportJourneyService
                         $institutionId
                     );
 
-                    $this->handleTransferAccess($report, $divisionId, $data['target_division_id'] ?? null);
+                    $this->handleTransferAccess(
+                        $report,
+                        $divisionId,
+                        $data['target_division_id'] ?? null
+                    );
                 }
 
+                /* === Complete === */
                 if ($action === 'complete') {
                     $journeys[] = $this->createJourney(
                         $report,
@@ -273,16 +306,32 @@ class ReportJourneyService
 
                     $this->finishAccess($report);
                 }
-            } else {
-                $canSkipInspection = $firstFlow === 'investigation' && $lastType === ReportJourneyType::SUBMITTED;
+            }
 
-                $allowedInvestigationEntries = [ReportJourneyType::INVESTIGATION, ReportJourneyType::TRANSFER, ReportJourneyType::TRIAL];
+            /* ===========================================================
+            FLOW 2: INVESTIGATION
+            =========================================================== */
+            else {
 
-                if (!$canSkipInspection && !in_array($lastType, $allowedInvestigationEntries, true)) {
-                    throw new RuntimeException('Laporan belum siap untuk tahap penyidikan.');
+                $canSkipInspection = (
+                    $firstFlow === 'investigation'
+                    && $lastType === ReportJourneyType::SUBMITTED
+                );
+
+                $allowed = [
+                    ReportJourneyType::SUBMITTED,
+                    ReportJourneyType::INVESTIGATION,
+                    ReportJourneyType::TRANSFER,
+                    ReportJourneyType::TRIAL
+                ];
+
+                if (!$canSkipInspection && !in_array($lastType, $allowed, true)) {
+                    throw new RuntimeException('Laporan belum bisa masuk tahap penyidikan.');
                 }
 
-                foreach ($data['admin_documents'] ?? [] as $index => $doc) {
+                /* ===== ADMINISTRASI PENYIDIKAN ===== */
+                foreach ($data['admin_documents'] ?? [] as $i => $doc) {
+
                     $journeys[] = $this->createJourney(
                         $report,
                         ReportJourneyType::INVESTIGATION,
@@ -292,24 +341,25 @@ class ReportJourneyService
                             'doc_number' => $doc['number'] ?? null,
                             'doc_date' => $doc['date'] ?? null,
                         ],
-                        [$files['admin_files'][$index] ?? null],
+                        isset($files['admin_files'][$i]) ? [$files['admin_files'][$i]] : [],
                         $divisionId,
                         $institutionId
                     );
                 }
 
-                $hasInvestigationEntry = $canSkipInspection || !empty($journeys);
+                $hasInvest = !empty($journeys) || $canSkipInspection;
 
+                /* ===== SIDANG ===== */
                 $needsTrial = (
                     !empty($data['trial_doc_number'])
-                    || !empty($files['trial_file'])
                     || !empty($data['trial_decision'])
+                    || !empty($files['trial_file'])
                     || $action === 'complete'
                 );
 
                 if ($needsTrial) {
-                    if (!$hasInvestigationEntry && !$canSkipInspection && $lastType === ReportJourneyType::SUBMITTED) {
-                        throw new RuntimeException('Dokumen penyidikan perlu ditambahkan sebelum sidang.');
+                    if (!$hasInvest) {
+                        throw new RuntimeException('Tambahkan dokumen penyidikan sebelum sidang.');
                     }
 
                     $journeys[] = $this->createJourney(
@@ -322,13 +372,17 @@ class ReportJourneyService
                             'doc_date' => $data['trial_doc_date'] ?? null,
                             'decision' => $data['trial_decision'] ?? null,
                         ],
-                        isset($files['trial_file']) && $files['trial_file'] ? [$files['trial_file']] : [],
+                        isset($files['trial_file']) && $files['trial_file']
+                            ? [$files['trial_file']]
+                            : [],
                         $divisionId,
                         $institutionId
                     );
                 }
 
+                /* ===== COMPLETE ===== */
                 if ($action === 'complete') {
+
                     $journeys[] = $this->createJourney(
                         $report,
                         ReportJourneyType::COMPLETED,
@@ -350,7 +404,10 @@ class ReportJourneyService
                 throw new RuntimeException('Tidak ada progress yang disimpan.');
             }
 
-            $this->notificationService->notifyReportStatus($report, $journeys[array_key_last($journeys)]->type);
+            $this->notificationService->notifyReportStatus(
+                $report,
+                $journeys[array_key_last($journeys)]->type
+            );
 
             DB::commit();
 
@@ -359,16 +416,18 @@ class ReportJourneyService
                 'message' => 'Progress laporan berhasil diperbarui.',
                 'data' => $journeys,
             ];
-        } catch (Throwable $throwable) {
+
+        } catch (Throwable $e) {
             DB::rollBack();
-            report($throwable);
+            report($e);
 
             return [
                 'status' => false,
-                'message' => $throwable->getMessage(),
+                'message' => $e->getMessage(),
             ];
         }
-    }
+}
+
 
     private function determineFirstFlow(Report $report): string
     {
@@ -454,23 +513,22 @@ class ReportJourneyService
 
     private function handleTransferAccess(Report $report, ?int $currentDivisionId, ?int $targetDivisionId): void
     {
-        $currentQuery = AccessData::where('report_id', $report->id)
-            ->where('is_finish', false);
+        // close only current division access
+        AccessData::where('report_id', $report->id)
+            ->where('division_id', $currentDivisionId)
+            ->update(['is_finish' => true]);
 
-        if ($currentDivisionId) {
-            $currentQuery->where('division_id', $currentDivisionId);
-        }
-
-        $currentQuery->update(['is_finish' => true]);
-
+        // give new division access
         if ($targetDivisionId) {
             AccessData::firstOrCreate([
                 'report_id' => $report->id,
                 'division_id' => $targetDivisionId,
+            ], [
                 'is_finish' => false,
             ]);
         }
     }
+
 
     private function finishAccess(Report $report): void
     {

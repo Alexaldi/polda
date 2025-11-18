@@ -222,56 +222,98 @@ class PelaporanController extends Controller
             return back()->with('error', 'Gagal memperbarui laporan')->withInput();
         }
 
+
         return redirect()->route('pelaporan.show', $report->id)
                  ->with('success', 'Laporan Berhasil Diupdate.');
     }
 
 
-    /** Tampilkan detail laporan */
-   /** Tampilkan detail laporan + timeline journey */
     public function show($id)
     {
-        $report = Report::with(['category', 'province', 'city', 'district', 'suspects.division', 'accessDatas'])
-            ->findOrFail($id);
-
-        $this->journeyService->ensureInitialAccess($report);
-
-        $journeys = $this->journeyService->paginateByReport($report->id, 5, order: 'desc');
-
-        $institutions = Institution::orderBy('name')->get(['id', 'name']);
-        $divisions = Division::with('parent')
-            ->whereNotNull('parent_id')
-            ->orderBy('name')
-            ->get(['id', 'name', 'type', 'parent_id', 'permissions']);
-
-        $journeyTypes = ReportJourneyType::manualOptions();
+        $report = Report::with([
+            'creator.division',
+            'category',
+            'province',
+            'city',
+            'district',
+            'suspects.division.parent',
+            'accessDatas',
+            'journeys.files'
+        ])->findOrFail($id);
 
         $user = auth()->user();
-        $division = $user?->division;
-        $isAdmin = $user && method_exists($user, 'hasAnyRole')
-            ? $user->hasAnyRole(['super admin', 'super-admin', 'admin'])
-            : false;
+        $division = $user->division;
 
-        $hasAccess = $this->journeyService->hasAccess($division, $report, $isAdmin);
+        // 1. Creator check
+        $isCreator = $report->creator_id === $user->id;
 
-        $showInspectionForm = $hasAccess && $division?->canInspection();
-        $showInvestigationForm = $hasAccess && !$showInspectionForm && $division?->canInvestigation();
-        $showProgressTab = ($isAdmin || $showInspectionForm || $showInvestigationForm)
-            && $report->status !== ReportJourneyType::COMPLETED->value;
+        // 2. Active access check
+        $hasActiveAccess = $report->accessDatas()
+            ->where('division_id', $division?->id)
+            ->where('is_finish', false)
+            ->exists();
 
-        return view('pages.pelaporan.show', [
+        // 3. Admin
+        $isAdmin = $user->hasRole('admin');
+
+        // 4. Final access
+        $hasAccess =
+            $isAdmin ||
+            $hasActiveAccess ||
+            ($isCreator && $report->status !== ReportJourneyType::COMPLETED->value);
+
+        // 5. Determine flow form visibility
+        $showInspectionForm = false;
+        $showInvestigationForm = false;
+
+        if ($division?->canInspection()) {
+            $showInspectionForm = true;
+        }
+
+        if ($division?->canInvestigation()) {
+            $showInvestigationForm = true;
+        }
+
+        // If can investigation, skip inspection
+        if ($showInvestigationForm) {
+            $showInspectionForm = false;
+        }
+
+        // Disable everything if report is completed
+        if ($report->status === ReportJourneyType::COMPLETED->value) {
+            $showInspectionForm = false;
+            $showInvestigationForm = false;
+        }
+
+        // 6. Show progress tab
+        $showProgressTab =
+            $hasAccess &&
+            ($showInspectionForm || $showInvestigationForm) &&
+            $report->status !== ReportJourneyType::COMPLETED->value;
+
+        $defaultFlow = $showInspectionForm ? 'inspection' : 'investigation';
+
+        $journeyTypes = ReportJourneyType::cases();
+        $institutions = Institution::all();
+        $divisions = Division::with('parent')->get();
+
+        return view('pelaporan.show', [
             'report' => $report,
-            'journeys' => $journeys,
+            'journeys' => $report->journeys,
             'journeyTypes' => $journeyTypes,
             'institutions' => $institutions,
             'divisions' => $divisions,
-            'statusLabel' => ReportJourneyType::tryFrom($report->status)?->label() ?? $report->status,
+
+            // logic vars
+            'hasAccess' => $hasAccess,
             'showInspectionForm' => $showInspectionForm,
             'showInvestigationForm' => $showInvestigationForm,
-            'hasAccess' => $hasAccess,
             'showProgressTab' => $showProgressTab,
+            'defaultFlow' => $defaultFlow,
         ]);
     }
+
+
 
     /** Hapus laporan */
     public function destroy($id)
