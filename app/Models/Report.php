@@ -34,6 +34,7 @@ class Report extends Model
 
     protected $casts = [
         'incident_datetime' => 'datetime',
+        'finish_time' => 'datetime',
     ];
 
     protected function finishTime(): Attribute
