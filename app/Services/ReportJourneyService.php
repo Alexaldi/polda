@@ -163,6 +163,8 @@ class ReportJourneyService
                     throw new RuntimeException('Urutan tahapan tidak valid untuk pemeriksaan.');
                 }
 
+                $touchStatus = $action !== 'save';
+
                 $inspectionJourney = $this->createJourney(
                     $report,
                     ReportJourneyType::INVESTIGATION,
@@ -175,7 +177,8 @@ class ReportJourneyService
                     ],
                     $files['inspection_files'] ?? [],
                     $divisionId,
-                    $institutionId
+                    $institutionId,
+                    $touchStatus,
                 );
 
                 $journeys[] = $inspectionJourney;
@@ -205,6 +208,7 @@ class ReportJourneyService
                     );
 
                     $journeys[] = $transferJourney;
+                    $lastType = ReportJourneyType::TRANSFER;
                     $this->handleTransferAccess($report, $divisionId, $data['target_division_id'] ?? null);
                 }
 
@@ -230,6 +234,7 @@ class ReportJourneyService
                     );
 
                     $journeys[] = $completeJourney;
+                    $lastType = ReportJourneyType::COMPLETED;
                     $this->finishAccess($report, $divisionId);
                 }
             } else {
@@ -261,7 +266,12 @@ class ReportJourneyService
                     $lastType = ReportJourneyType::INVESTIGATION;
                 }
 
-                $needsTrial = !empty($data['trial_doc_number']) || !empty($files['trial_file']) || !empty($data['trial_decision']) || $action === 'complete';
+                $needsTrial = (
+                    !empty($data['trial_doc_number'])
+                    || !empty($files['trial_file'])
+                    || !empty($data['trial_decision'])
+                    || $action === 'complete'
+                );
 
                 if ($needsTrial) {
                     if (!$this->validFlow($lastType, ReportJourneyType::TRIAL)) {
@@ -338,7 +348,8 @@ class ReportJourneyService
         array $description,
         array $files = [],
         ?int $divisionId = null,
-        ?int $institutionId = null
+        ?int $institutionId = null,
+        bool $touchReportStatus = true,
     ): ReportJourney {
         $journeyData = [
             'report_id' => $report->id,
@@ -371,12 +382,15 @@ class ReportJourneyService
             $createdFiles[] = $filename;
         }
 
-        $updateData = ['status' => $type->value];
-        if ($type === ReportJourneyType::COMPLETED) {
-            $updateData['finish_time'] = Carbon::now();
-        }
+        if ($touchReportStatus) {
+            $updateData = ['status' => $type->value];
 
-        $report->update($updateData);
+            if ($type === ReportJourneyType::COMPLETED) {
+                $updateData['finish_time'] = Carbon::now()->format('Y-m-d H:i:s');
+            }
+
+            $report->update($updateData);
+        }
 
         if (!empty($createdFiles)) {
             $this->notificationService->notifyBuktiDitambahkan(
@@ -390,12 +404,14 @@ class ReportJourneyService
 
     private function handleTransferAccess(Report $report, ?int $currentDivisionId, ?int $targetDivisionId): void
     {
+        $currentQuery = AccessData::where('report_id', $report->id)
+            ->where('is_finish', false);
+
         if ($currentDivisionId) {
-            AccessData::where('report_id', $report->id)
-                ->where('division_id', $currentDivisionId)
-                ->where('is_finish', false)
-                ->update(['is_finish' => true]);
+            $currentQuery->where('division_id', $currentDivisionId);
         }
+
+        $currentQuery->update(['is_finish' => true]);
 
         if ($targetDivisionId) {
             AccessData::create([
@@ -408,16 +424,18 @@ class ReportJourneyService
 
     private function finishAccess(Report $report, ?int $divisionId = null): void
     {
+        $query = AccessData::where('report_id', $report->id);
+
         if ($divisionId) {
-            AccessData::where('report_id', $report->id)
-                ->where('division_id', $divisionId)
-                ->update(['is_finish' => true]);
+            $query->where('division_id', $divisionId);
         }
+
+        $query->update(['is_finish' => true]);
     }
 
     private function validInspectionStart(ReportJourneyType $lastType): bool
     {
-        return $lastType === ReportJourneyType::SUBMITTED;
+        return in_array($lastType, [ReportJourneyType::SUBMITTED, ReportJourneyType::INVESTIGATION], true);
     }
 
     private function validInvestigationEntry(ReportJourneyType $lastType): bool

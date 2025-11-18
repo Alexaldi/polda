@@ -27,22 +27,28 @@ class ReportProgressController extends Controller
         $action = $request->input('action');
         $flow = $request->input('flow', 'inspection');
 
-        $hasAccess = $division
-            ? $report->accessDatas()
+        $isAdmin = $user && method_exists($user, 'hasAnyRole')
+            ? $user->hasAnyRole(['super admin', 'super-admin', 'admin'])
+            : false;
+
+        $hasAccess = $isAdmin;
+
+        if (!$hasAccess && $division) {
+            $hasAccess = $report->accessDatas()
                 ->where('division_id', $division->id)
                 ->where('is_finish', false)
-                ->exists()
-            : false;
+                ->exists();
+        }
 
         if (!$hasAccess) {
             return back()->with('error', 'Anda tidak memiliki akses untuk mengupdate progress laporan ini.');
         }
 
-        if ($flow === 'inspection' && !$division?->canInspection()) {
+        if ($flow === 'inspection' && !$isAdmin && !$division?->canInspection()) {
             return back()->with('error', 'Divisi Anda tidak dapat melakukan pemeriksaan.');
         }
 
-        if ($flow === 'investigation' && !$division?->canInvestigation()) {
+        if ($flow === 'investigation' && !$isAdmin && !$division?->canInvestigation()) {
             return back()->with('error', 'Divisi Anda tidak dapat melakukan penyidikan.');
         }
 
@@ -82,7 +88,7 @@ class ReportProgressController extends Controller
         ]);
 
         $validator->after(function ($validator) use ($request, $action, $flow) {
-            if ($flow === 'inspection' && in_array($action, ['complete', 'transfer', 'save'], true)) {
+            if ($flow === 'inspection' && in_array($action, ['save', 'complete', 'transfer'], true)) {
                 if (!$request->filled('inspection_doc_number')) {
                     $validator->errors()->add('inspection_doc_number', 'Nomor dokumen pemeriksaan wajib diisi.');
                 }
@@ -130,9 +136,11 @@ class ReportProgressController extends Controller
             );
 
             if ($requiresTrial) {
-                foreach (['trial_doc_number' => 'Nomor dokumen sidang wajib diisi.',
-                             'trial_doc_date' => 'Tanggal dokumen sidang wajib diisi.',
-                             'trial_decision' => 'Putusan sidang wajib diisi.'] as $field => $message) {
+                foreach ([
+                    'trial_doc_number' => 'Nomor dokumen sidang wajib diisi.',
+                    'trial_doc_date' => 'Tanggal dokumen sidang wajib diisi.',
+                    'trial_decision' => 'Putusan sidang wajib diisi.',
+                ] as $field => $message) {
                     if (!$request->filled($field)) {
                         $validator->errors()->add($field, $message);
                     }
@@ -185,7 +193,7 @@ class ReportProgressController extends Controller
 
         if ($result['status']) {
             return redirect()
-                ->route('pelaporan.show', ['pelaporan' => $report->id])
+                ->route('pelaporan.show', $report->id)
                 ->with('success', $result['message']);
         }
 

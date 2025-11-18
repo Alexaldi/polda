@@ -246,15 +246,21 @@ class PelaporanController extends Controller
 
         $user = auth()->user();
         $division = $user?->division;
-        $hasAccess = $division
-            ? $report->accessDatas
-                ->where('division_id', $division->id)
-                ->where('is_finish', false)
-                ->isNotEmpty()
+        $isAdmin = $user && method_exists($user, 'hasAnyRole')
+            ? $user->hasAnyRole(['super admin', 'super-admin', 'admin'])
             : false;
 
-        $canInspection = $hasAccess && ($division?->canInspection() ?? false);
-        $canInvestigation = $hasAccess && ($division?->canInvestigation() ?? false);
+        $hasAccess = $isAdmin;
+
+        if (!$hasAccess && $division) {
+            $hasAccess = $report->accessDatas()
+                ->where('division_id', $division->id)
+                ->where('is_finish', false)
+                ->exists();
+        }
+
+        $canInspection = $hasAccess && (($division?->canInspection() ?? false) || $isAdmin);
+        $canInvestigation = $hasAccess && (($division?->canInvestigation() ?? false) || $isAdmin);
 
         return view('pages.pelaporan.show', [
             'report' => $report,
