@@ -296,6 +296,7 @@ class PelaporanController extends Controller
         $journeyTypes = ReportJourneyType::cases();
         $institutions = Institution::all();
         $divisions = Division::with('parent')->get();
+        $investigationDivisions = $divisions->filter(fn ($division) => $division->canInvestigation());
 
         return view('pelaporan.show', [
             'report' => $report,
@@ -303,6 +304,7 @@ class PelaporanController extends Controller
             'journeyTypes' => $journeyTypes,
             'institutions' => $institutions,
             'divisions' => $divisions,
+            'investigationDivisions' => $investigationDivisions,
 
             // logic vars
             'hasAccess' => $hasAccess,
