@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Repositories\PelaporanRepository;
 use Illuminate\Support\Facades\DB;
 use App\Models\Report;
+use App\Models\AccessData;
 
 class PelaporanService
 {
@@ -44,37 +45,39 @@ class PelaporanService
             'phone_of_reporter' => $data['phone_of_reporter'],
             'created_by' => auth()->id(),
             'status' => 'SUBMITTED',
-            'division_id' => $divisionId, 
+            'division_id' => auth()->user()->division_id, 
             'code' => $this->generateReportCode(),
         ]);
 
         $this->repo->createJourney([
             'report_id' => $report->id,
-            'division_id' => $divisionId,
+            'division_id' => auth()->user()->division_id,
             'type' => 'SUBMITTED',
             'description' => $data['description'],
         ]);
 
-        if (!empty($data['suspects'])) {
-            foreach ($data['suspects'] as $suspect) {
+        foreach ($data['suspects'] as $suspect) {
+            $suspectDivision = $suspect['satker_id']
+                ?? $suspect['satwil_id']
+                ?? auth()->user()->division_id;
 
-                $suspectDivision = $suspect['satker_id']
-                    ?? $suspect['satwil_id']
-                    ?? $divisionId;
+            $this->repo->createSuspect([
+                'report_id'   => $report->id,
+                'name'        => $suspect['name'],
+                'division_id' => $suspectDivision,
+            ]);
 
-                $this->repo->createSuspect([
-                    'report_id'   => $report->id,
-                    'name'        => $suspect['name'],
-                    'division_id' => $suspectDivision,
+            // Tambahkan access hanya jika division beda
+            if ($suspectDivision != auth()->user()->division_id) {
+                $this->repo->createAccess([
+                    'report_id'  => $report->id,
+                    'division_id'=> $suspectDivision,
+                    'is_finish'  => false,
                 ]);
             }
         }
 
-        $this->repo->createAccess([
-            'report_id'  => $report->id,
-            'division_id'=> $divisionId,
-            'is_finish'  => false,
-        ]);
+
 
         DB::commit();
 
@@ -105,19 +108,36 @@ class PelaporanService
 
     public function datatables($filter_q = null)
     {
-        $query = Report::query()
-            ->with(['province', 'city', 'district']); 
+        $user = auth()->user();
 
-        // Jika ada filter tambahan
-        if (!empty($filter_q)) {
-            $query->where(function($q) use ($filter_q) {
-                $q->where('title', 'like', "%$filter_q%")
-                ->orWhere('status', 'like', "%$filter_q%");
-            });
+        if (strtolower($user->getRoleNames()->first()) === 'admin') {
+            return Report::with(['province', 'city', 'district']);
+        } else {
+            $userReportIds = Report::where('created_by', $user->id)
+                ->pluck('id')->toArray();
+
+            $allowedReportIds = AccessData::where('division_id', $user->division_id)
+                ->pluck('report_id')->toArray();
+
+            $finalIds = array_unique(array_merge($userReportIds, $allowedReportIds));
+
+            $query = Report::with(['province', 'city', 'district'])
+                ->whereIn('id', $finalIds)
+                ->where('division_id', $user->division_id);
+
+            if (empty($finalIds)) {
+                return Report::whereRaw('1=0');
+            } else {
+                return Report::with(['province', 'city', 'district'])
+                    ->whereIn('id', $finalIds)
+                    ->where('division_id', $user->division_id);  
+            }
         }
-
-        return $query;
     }
+
+
+
+
 
     public function delete($id)
     {
@@ -152,5 +172,93 @@ class PelaporanService
             throw $e;
         }
     }
+
+    public function getById($id)
+    {
+        return $this->repo->find($id);
+    }
+
+    public function update($id, array $data)
+    {
+        DB::beginTransaction();
+
+        try {
+
+            // Ambil laporan beserta relasi
+            $report = $this->repo->find($id);
+            if (!$report) {
+                throw new \Exception("Laporan tidak ditemukan.");
+            }
+
+            // ========== UPDATE DATA REPORT ==========
+            $this->repo->updateReport($report, [
+                'title'               => $data['title'],
+                'incident_datetime'   => $data['incident_datetime'],
+                'category_id'         => $data['category_id'],
+                'description'         => $data['description'],
+                'city_id'             => $data['city_id'],
+                'district_id'         => $data['district_id'],
+                'address_detail'      => $data['address_detail'],
+                'name_of_reporter'    => $data['name_of_reporter'],
+                'address_of_reporter' => $data['address_of_reporter'],
+                'phone_of_reporter'   => $data['phone_of_reporter'],
+            ]);
+
+            // ========== UPDATE SUSPECTS ==========
+            // HAPUS semua suspects lama
+            $report->suspects()->delete();
+
+            // TAMBAHKAN suspects baru
+            if (!empty($data['suspects'])) {
+                foreach ($data['suspects'] as $suspect) {
+                    $divisionId = $suspect['division_id']
+                        ?? $suspect['satker_id']
+                        ?? $suspect['satwil_id']
+                        ?? null;
+
+                    $this->repo->createSuspect([
+                        'report_id'   => $report->id,
+                        'name'        => $suspect['name'],
+                        'division_id' => $divisionId,
+                    ]);
+                }
+            }
+
+            // ========== UPDATE ACCESS DATA ==========
+            // Ambil division utama
+            $divisionId = $data['division_id']
+                ?? ($data['suspects'][0]['division_id'] ?? null)
+                ?? auth()->user()->division_id;
+
+            if (!$divisionId) {
+                throw new \Exception("Division ID tidak ditentukan.");
+            }
+
+            // HAPUS access lama
+            $report->accessDatas()->delete();
+
+            // INSERT access baru
+            $this->repo->createAccess([
+                'report_id'  => $report->id,
+                'division_id'=> auth()->user()->division_id,
+                'is_finish'  => false,
+            ]);
+
+            // ========== UPDATE JOURNEY ==========
+            $report->journeys()->create([
+                'division_id' => auth()->user()->division_id,
+                'type'        => 'SUBMITTED',
+                'description' => $data['description'],
+            ]);
+
+            DB::commit();
+            return $report;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
 
 }

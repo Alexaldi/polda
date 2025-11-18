@@ -23,15 +23,15 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Nama Pelapor</label>
-                                    <input type="text" name="name_of_reporter" class="form-control" value="{{ old('name_of_reporter') }}">
+                                    <input type="text" name="name_of_reporter" class="form-control" value="{{ old('name_of_reporter', $pelaporan->name_of_reporter ?? '') }}">
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">No Telepon Pelapor</label>
-                                    <input type="number" name="phone_of_reporter" class="form-control" value="{{ old('phone_of_reporter') }}">
+                                    <input type="number" name="phone_of_reporter" class="form-control" value="{{ old('phone_of_reporter', $pelaporan->phone_of_reporter ?? '') }}">
                                 </div>
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label">Alamat Pelapor</label>
-                                    <textarea type="text" name="address_of_reporter" class="form-control" value="{{ old('address_of_reporter') }}"></textarea>
+                                    <textarea type="text" name="address_of_reporter" class="form-control" >{{ old('address_of_reporter', $pelaporan->address_of_reporter ?? '') }}</textarea>
                                 </div>
 
                                 <div class="col-12"><hr></div>
@@ -165,8 +165,8 @@
 
 @section('scripts')
 <script>
-var oldCityId = "{{ $data->city_id ?? '' }}";
-var oldDistrictId = "{{ $data->district_id ?? '' }}";
+var oldCityId = "{{ $pelaporan->city_id ?? '' }}";
+var oldDistrictId = "{{ $pelaporan->district_id ?? '' }}";
 $(document).ready(function () {
     loadCities(oldCityId);
     
@@ -176,7 +176,7 @@ $(document).ready(function () {
 });
     
 function loadCities(selectedCityId = null) {
-    const provinceId = 12; // FIX: Jawa Barat
+    const provinceId = 12; 
     
     $.get('/get-cities/' + provinceId, function (data) {
         $('#city_id').html('<option value="">Pilih Kota</option>');
@@ -212,39 +212,45 @@ function loadDistricts(cityId, selectedDistrictId = null) {
     });
 }
 
-// ======================
-// FUNGSI TAMBAH TERLAPOR KE TABEL
-// ======================
 window.appendSuspectRow = function(data) {
     const tbody = document.getElementById('suspects-table-body');
     const hiddenInputs = document.getElementById('suspects-hidden-inputs');
 
-    const index = tbody.children.length; // hitung row ke berapa
+    const index = tbody.children.length; 
+    const rowId = "suspect-row-" + index;
 
-    // Tentukan nama satuan (Satker / Satwil)
     const unitName = data.unit_type === 'Satker' ? data.satker_name : data.satwil_name;
 
-    // ====== Tampilkan di tabel ======
     const row = document.createElement('tr');
+    row.setAttribute("id", rowId);
+
     row.innerHTML = `
         <td>${data.name}</td>
         <td>${data.unit_type}</td>
         <td>${unitName}</td>
         <td>
-            <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">Hapus</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeSuspect('${rowId}')">Hapus</button>
         </td>
     `;
+
     tbody.appendChild(row);
 
-    // ====== Hidden input untuk dikirim ke controller ======
     hiddenInputs.innerHTML += `
-      <input type="hidden" name="suspects[${index}][name]" value="${data.name}">
-      <input type="hidden" name="suspects[${index}][unit_type]" value="${data.unit_type}">
-      <input type="hidden" name="suspects[${index}][division_id]" 
-            value="${data.unit_type === 'Satker' ? data.satker_id : data.satwil_id}">
-  `;
-
+        <div id="inputs-${rowId}">
+            <input type="hidden" name="suspects[${index}][name]" value="${data.name}">
+            <input type="hidden" name="suspects[${index}][unit_type]" value="${data.unit_type}">
+            <input type="hidden" name="suspects[${index}][division_id]" 
+                value="${data.unit_type === 'Satker' ? data.satker_id : data.satwil_id}">
+        </div>
+    `;
 };
+
+window.removeSuspect = function(rowId) {
+    document.getElementById(rowId)?.remove();
+
+    document.getElementById("inputs-" + rowId)?.remove();
+}
+
 
 document.addEventListener('DOMContentLoaded', function() {
   const unitType = document.getElementById('tlp-unit-type');
@@ -310,6 +316,17 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-
+@isset($pelaporan)
+    @foreach ($pelaporan->suspects as $suspect)
+        window.appendSuspectRow({
+            name: "{{ $suspect->name }}",
+            unit_type: "{{ $suspect->division->type ?? '' }}",
+            satker_id: "{{ $suspect->division_id }}",
+            satwil_id: "{{ $suspect->division_id }}",
+            satker_name: "{{ $suspect->division->name ?? '-' }}",
+            satwil_name: "{{ $suspect->division->name ?? '-' }}"
+        });
+    @endforeach
+@endisset
 </script>
 @endsection
