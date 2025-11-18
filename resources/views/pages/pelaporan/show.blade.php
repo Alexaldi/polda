@@ -470,16 +470,24 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function freshFileInput() {
-    var existing = document.getElementById('admin-doc-file');
-    if (!existing) return null;
-    var wrapper = existing.parentElement;
+    var wrapper = document.getElementById('admin-doc-file-wrapper');
+    if (!wrapper) return null;
+    wrapper.querySelectorAll('input[type="file"]').forEach(function(el) { el.remove(); });
     var fresh = document.createElement('input');
     fresh.type = 'file';
     fresh.className = 'form-control';
     fresh.id = 'admin-doc-file';
     fresh.accept = '.jpg,.jpeg,.png,.pdf,.doc,.docx';
-    existing.replaceWith(fresh);
+    wrapper.appendChild(fresh);
     return fresh;
+  }
+
+  function ensureFileInputVisible() {
+    var wrapper = document.getElementById('admin-doc-file-wrapper');
+    if (!wrapper) return;
+    if (!wrapper.querySelector('input[type="file"]')) {
+      freshFileInput();
+    }
   }
 
   function appendAdminRow(data, fileInputEl) {
@@ -504,6 +512,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (fileInputEl) {
       fileInputEl.name = 'admin_documents[' + adminIndex + '][file]';
       fileInputEl.style.display = 'none';
+      fileInputEl.id = '';
+      if (fileInputEl.parentElement) {
+        fileInputEl.parentElement.removeChild(fileInputEl);
+      }
       hidden.appendChild(fileInputEl);
     }
     hiddenEl.appendChild(hidden);
@@ -511,8 +523,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   if (adminDocModal) {
-    adminDocModal.addEventListener('show.bs.modal', function() {
-      freshFileInput();
+    adminDocModal.addEventListener('shown.bs.modal', function() {
+      ensureFileInputVisible();
     });
     adminDocModal.addEventListener('hidden.bs.modal', function() {
       freshFileInput();
@@ -560,7 +572,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   addPlaceholderIfEmpty();
-
+  ensureFileInputVisible();
+  
   var progressForm = document.getElementById('progressForm');
   var actionInput = document.getElementById('progress-action');
   var flowInput = document.getElementById('progress-flow');

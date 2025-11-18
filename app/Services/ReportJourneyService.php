@@ -203,6 +203,9 @@ class ReportJourneyService
             $division = $divisionId ? Division::find($divisionId) : null;
             $lastType = $this->lastJourneyType($report);
             $firstFlow = $this->determineFirstFlow($report);
+            $hasExistingInvestigation = $report->journeys()
+                ->where('type', ReportJourneyType::INVESTIGATION->value)
+                ->exists();
 
             $flow = $data['flow'] ?? 'inspection';
             $action = $data['action'] ?? 'save';
@@ -344,7 +347,7 @@ class ReportJourneyService
                     );
                 }
 
-                $hasInvest = !empty($journeys) || $canSkipInspection;
+                $hasInvest = $hasExistingInvestigation || !empty($journeys) || $canSkipInspection;
 
                 /* ===== SIDANG ===== */
                 $needsTrial = (
