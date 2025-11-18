@@ -91,8 +91,7 @@ class ReportJourneyService
         }
 
         $creatorDivisionId = $report->creator?->division_id
-            ?? $report->division_id
-            ?? auth()->user()?->division_id;
+            ?? $report->division_id;
 
         if ($creatorDivisionId) {
             AccessData::firstOrCreate([
@@ -113,27 +112,10 @@ class ReportJourneyService
             return false;
         }
 
-        $hasActiveAccess = $report->accessDatas()
+        return $report->accessDatas()
             ->where('division_id', $division->id)
             ->where('is_finish', false)
             ->exists();
-
-        if ($hasActiveAccess) {
-            return true;
-        }
-
-        $hasAccessData = $report->accessDatas()->exists();
-
-        if (
-            !$hasAccessData
-            && $report->creator
-            && $report->creator->division_id === $division->id
-            && $report->status !== ReportJourneyType::COMPLETED->value
-        ) {
-            return true;
-        }
-
-        return false;
     }
 
     public function store(array $data, array $files = []): array
@@ -170,7 +152,7 @@ class ReportJourneyService
             }
 
             if ($type === ReportJourneyType::COMPLETED) {
-                $this->finishAccess($report, $data['division_id'] ?? null);
+                $this->finishAccess($report);
             }
 
             $this->notificationService->notifyReportStatus($journey->report, $type->value);
@@ -289,7 +271,7 @@ class ReportJourneyService
                         $institutionId
                     );
 
-                    $this->finishAccess($report, $divisionId);
+                    $this->finishAccess($report);
                 }
             } else {
                 $canSkipInspection = $firstFlow === 'investigation' && $lastType === ReportJourneyType::SUBMITTED;
@@ -360,7 +342,7 @@ class ReportJourneyService
                         $institutionId
                     );
 
-                    $this->finishAccess($report, $divisionId);
+                    $this->finishAccess($report);
                 }
             }
 
@@ -454,7 +436,7 @@ class ReportJourneyService
             $updateData = ['status' => $type->value];
 
             if ($type === ReportJourneyType::COMPLETED) {
-                $updateData['finish_time'] = Carbon::now()->format('Y-m-d H:i:s');
+                $updateData['finish_time'] = Carbon::now();
             }
 
             $report->update($updateData);
@@ -482,7 +464,7 @@ class ReportJourneyService
         $currentQuery->update(['is_finish' => true]);
 
         if ($targetDivisionId) {
-            AccessData::create([
+            AccessData::firstOrCreate([
                 'report_id' => $report->id,
                 'division_id' => $targetDivisionId,
                 'is_finish' => false,
@@ -490,15 +472,10 @@ class ReportJourneyService
         }
     }
 
-    private function finishAccess(Report $report, ?int $divisionId = null): void
+    private function finishAccess(Report $report): void
     {
-        $query = AccessData::where('report_id', $report->id);
-
-        if ($divisionId) {
-            $query->where('division_id', $divisionId);
-        }
-
-        $query->update(['is_finish' => true]);
+        AccessData::where('report_id', $report->id)
+            ->update(['is_finish' => true]);
     }
 
     private function normalizeType(null|ReportJourneyType|string $type): ?ReportJourneyType

@@ -256,7 +256,7 @@ class PelaporanController extends Controller
 
         $showInspectionForm = $hasAccess && $division?->canInspection();
         $showInvestigationForm = $hasAccess && !$showInspectionForm && $division?->canInvestigation();
-        $showProgressTab = ($showInspectionForm || $showInvestigationForm)
+        $showProgressTab = ($isAdmin || $showInspectionForm || $showInvestigationForm)
             && $report->status !== ReportJourneyType::COMPLETED->value;
 
         return view('pages.pelaporan.show', [
