@@ -67,6 +67,15 @@ class Division extends Model
     {
         $permissions = $this->permissions ?? [];
 
+        if (is_string($permissions)) {
+            $decoded = json_decode($permissions, true);
+            $permissions = is_array($decoded) ? $decoded : [];
+        }
+
+        if (!is_array($permissions)) {
+            return false;
+        }
+
         return !empty($permissions[$key]);
     }
 

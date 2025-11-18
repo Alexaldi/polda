@@ -13,22 +13,8 @@
                         $provinceName = $report->province?->name;
                         $cityName     = $report->city?->name;
                         $districtName = $report->district?->name;
-                        $user = auth()->user();
-                        $division = $user?->division;
-                        $isAdmin = $user && method_exists($user, 'hasAnyRole')
-                            ? $user->hasAnyRole(['super admin', 'super-admin', 'admin'])
-                            : false;
-                        $isCreator = $user && $report->creator_id === $user->id;
-                        $accessDatas = $report->accessDatas ?? collect();
-                        $hasActiveAccess = $division
-                            ? $accessDatas->first(fn ($access) => $access->division_id === $division->id && !$access->is_finish) !== null
-                            : false;
                         $isCompleted = $report->status === \App\Enums\ReportJourneyType::COMPLETED->value;
-                        $hasAccess = $isAdmin || $hasActiveAccess || ($isCreator && !$isCompleted);
-                        $showInspectionForm = !$division?->canInvestigation() && $division?->canInspection() && !$isCompleted;
-                        $showInvestigationForm = $division?->canInvestigation() && !$isCompleted;
-                        $showProgressTab = $hasAccess && ($showInspectionForm || $showInvestigationForm);
-                        $defaultFlow = $showInspectionForm ? 'inspection' : 'investigation';
+                        $defaultFlow = $defaultFlow ?? ($showInspectionForm ? 'inspection' : 'investigation');
                     @endphp
 
                     <ul class="nav nav-tabs" role="tablist">

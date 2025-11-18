@@ -253,10 +253,13 @@ class PelaporanController extends Controller
         // Data referensi dropdown
         $institutions = Institution::orderBy('name')->get(['id', 'name']);
         $divisions = Division::with('parent')
-            ->whereNotNull('parent_id')
             ->orderBy('name')
             ->get(['id', 'name', 'type', 'parent_id', 'permissions']);
 
+        $investigationDivisions = $divisions
+            ->filter(fn ($division) => $division->canInvestigation())
+            ->values();
+        
         $journeyTypes = ReportJourneyType::manualOptions();
 
         // User & admin check
@@ -279,11 +282,13 @@ class PelaporanController extends Controller
         $canInvestigation = $division?->canInvestigation() ?? false;
 
         $showInspectionForm = $hasAccess && $canInspection;
-        $showInvestigationForm = $hasAccess && !$canInspection && $canInvestigation;
+        $showInvestigationForm = $hasAccess && !$showInspectionForm && $canInvestigation;
 
         // Tab progress muncul kalau user boleh update
         $showProgressTab = ($isAdmin || $showInspectionForm || $showInvestigationForm)
             && $report->status !== ReportJourneyType::COMPLETED->value;
+
+        $defaultFlow = $showInspectionForm ? 'inspection' : 'investigation';
 
         return view('pages.pelaporan.show', [
             'report' => $report,
@@ -291,6 +296,8 @@ class PelaporanController extends Controller
             'journeyTypes' => $journeyTypes,
             'institutions' => $institutions,
             'divisions' => $divisions,
+            'investigationDivisions' => $investigationDivisions,
+            'defaultFlow' => $defaultFlow,
             'statusLabel' => ReportJourneyType::tryFrom($report->status)?->label() ?? $report->status,
             'hasAccess' => $hasAccess,
             'showInspectionForm' => $showInspectionForm,
