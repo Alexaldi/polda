@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ReportJourneyType;
 use App\Repositories\PelaporanRepository;
 use Illuminate\Support\Facades\DB;
 use App\Models\Report;
@@ -44,7 +45,7 @@ class PelaporanService
             'address_of_reporter' => $data['address_of_reporter'],
             'phone_of_reporter' => $data['phone_of_reporter'],
             'created_by' => auth()->id(),
-            'status' => 'SUBMITTED',
+            'status' => ReportJourneyType::SUBMITTED->value,
             'division_id' => auth()->user()->division_id, 
             'code' => $this->generateReportCode(),
         ]);
