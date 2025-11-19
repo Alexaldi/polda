@@ -58,7 +58,7 @@ class Division extends Model
         return $this->hasMany(AccessData::class, 'division_id');
     }
 
-    public function division()
+    public function suspect()
     {
         return $this->hasMany(Suspect::class, 'division_id');
     }

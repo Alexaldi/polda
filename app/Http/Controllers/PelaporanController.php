@@ -39,6 +39,7 @@ class PelaporanController extends Controller
     /** Menampilkan halaman utama */
     public function index()
     {
+        // dd(auth()->user()->getRoleNames());
         return view('pages.pelaporan.index', [
             'title' => $this->feature_title,
             'name' => $this->feature_name,
@@ -50,35 +51,35 @@ class PelaporanController extends Controller
     /** DataTables server-side */
     public function datatables(Request $request)
     {
-        if (!$request->ajax()) return;
+        // Panggil method service untuk mendapatkan query laporan
+        $query = $this->service->datatables($request->input('filter_q', ''));
 
-        $columns = ['id', 'title', 'incident_datetime', 'status', 'action'];
+        // Jika ada pencarian, tambahkan kondisi pencarian
+        $search = $request->input('search.value', '');
+        if (!empty($search)) {
+            $query = $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%$search%")
+                    ->orWhere('status', 'like', "%$search%");
+            });
+        }
 
+        // Hitung jumlah total laporan yang ditemukan
+        $total = $query->count();
+
+        // Ambil data laporan berdasarkan pagination
         $limit = $request->input('length', 10);
         $start = $request->input('start', 0);
         $orderColIndex = $request->input('order.0.column', 1);
         $dir = $request->input('order.0.dir', 'asc');
-        $order = $columns[$orderColIndex] ?? 'created_at';
-        $search = $request->input('search.value', '');
-        $filter_q = $request->input('filter_q', '');
+        $order = ['id', 'title', 'incident_datetime', 'status', 'action'][$orderColIndex] ?? 'created_at';
 
-        $query = $this->service->datatables($filter_q);
-
-        // Jika ada search bawaan DataTables
-        if (!empty($search)) {
-            $query = $query->where(function($q) use ($search) {
-                $q->where('title', 'like', "%$search%")
-                ->orWhere('status', 'like', "%$search%");
-            });
-        }
-        
-        $total = $query->count();
-
+        // Ambil laporan yang sesuai dengan pagination
         $reports = $query->orderBy($order, $dir)
-                 ->skip($start)
-                 ->take($limit)
-                 ->get();
+            ->skip($start)
+            ->take($limit)
+            ->get();
 
+        // Persiapkan data untuk DataTables
         $data = [];
         foreach ($reports as $key => $report) {
             $htmlButton = '<td class="text-nowrap">
@@ -109,7 +110,7 @@ class PelaporanController extends Controller
             ];
         }
 
-
+        // Kembalikan hasil ke DataTables
         return response()->json([
             'draw' => intval($request->input('draw')),
             'recordsTotal' => $total,
@@ -118,9 +119,24 @@ class PelaporanController extends Controller
         ]);
     }
 
+
     /** Form tambah laporan */
     public function create()
     {
+        $division = auth()->user()->division;
+
+        if (!$division) {
+            return redirect()->route('pelaporan.index')
+                ->with('error', 'Divisi anda tidak valid. Hubungi admin.');
+        }
+
+        $perm = json_decode($division->permissions ?? '{}', true);
+
+        if (($perm['inspection'] ?? false) === false && ($perm['investigation'] ?? false) === false) {
+            return redirect()->route('pelaporan.index')
+                ->with('error', 'Anda tidak memiliki izin untuk membuat laporan.');
+        }
+
         return view('pages.pelaporan.create', [
             'title' => 'Tambah Laporan',
             'pelaporan' => null,
@@ -130,6 +146,7 @@ class PelaporanController extends Controller
             'categories' => ReportCategory::all(),
         ]);
     }
+
 
     /** Ambil cities per province */
     public function getCitiesByProvince($provinceId)
@@ -171,7 +188,6 @@ class PelaporanController extends Controller
         $report = $this->service->store($validated);
         return redirect()->route('pelaporan.index')
                  ->with('success', 'Laporan Berhasil Dibuat.');
-
     }
 
     public function byType()
@@ -184,47 +200,63 @@ class PelaporanController extends Controller
     /** Form edit laporan */
     public function edit($id)
     {
+
+        $division  = auth()->user()->division;
+        $perm      = json_decode($division->permissions, true);
+
+        if (($perm['inspection'] ?? false) === false && ($perm['investigation'] ?? false) === false) {
+            return redirect()->route('pelaporan.index')
+                ->with('error', 'Anda tidak memiliki izin untuk membuat laporan.');
+        }
+        
         $report = $this->service->getById($id);
-        if (!$report) return redirect()->route('pelaporan.index')->with('error', 'Laporan tidak ditemukan.');
+        // dd($report->suspects->toArray());
+        if (!$report) return redirect()->route('pelaporan.index')
+            ->with('error', 'Laporan tidak ditemukan.');
 
         return view('pages.pelaporan.create', [
             'title' => 'Edit Laporan',
             'pelaporan' => $report,
             'provinces' => Province::all(),
-            'cities' => $report->province_id ? City::where('province_code', $report->province_id)->get() : [],
-            'districts' => $report->city_id ? District::where('city_code', $report->city_id)->get() : [],
+            'cities' => $report->province_id 
+                ? City::where('province_code', $report->province_id)->get()
+                : [],
+
+            'districts' => $report->city_id 
+                ? District::where('city_code', $report->city_id)->get()
+                : [],
             'categories' => ReportCategory::all(),
         ]);
     }
 
+
+
+
     /** Update laporan */
     public function update(Request $request, $id)
     {
+        // dd($request->all());
         $validated = $request->validate([
-            'title' => 'required|string',
-            'description' => 'required|string',
-            'incident_datetime' => 'required|date',
-            'province_id' => 'required|integer',
-            'city_id' => 'required|integer',
-            'district_id' => 'required|integer',
-            'category_id' => 'required|integer',
-            'address_detail' => 'nullable|string',
-            'suspects.*.name' => 'required|string',
-            'suspects.*.description' => 'nullable|string',
+            'title'               => 'required|string',
+            'incident_datetime'   => 'required|date',
+            'category_id'         => 'required|integer',
+            'description'         => 'required|string',
+            'city_id'             => 'required|integer',
+            'district_id'         => 'required|integer',
+            'address_detail'      => 'nullable|string',
+            'name_of_reporter'    => 'required|string',
+            'address_of_reporter' => 'required|string',
+            'phone_of_reporter'   => 'required|string',
+            'suspects'            => 'nullable|array',
+            'suspects.*.name'     => 'required_with:suspects',
+            'suspects.*.division_id' => 'nullable|integer',
         ]);
 
-        $request->merge([
-            'status' => $request->input('status', 'SUBMITTED')
-        ]);
-        $report = $this->service->update($id, $validated);
-
-        if (!$report) {
-            return back()->with('error', 'Gagal memperbarui laporan')->withInput();
-        }
+        $this->service->update($id, $validated);
 
 
         return redirect()->route('pelaporan.show', $report->id)
-                 ->with('success', 'Laporan Berhasil Diupdate.');
+                 ->with('success', 'Laporan Berhasil Diperbaharui.');
     }
 
 

@@ -26,13 +26,29 @@ class PelaporanRepository
 
     public function createAccess(array $data)
     {
+        // dd('MAMPIR KE createAccess', $data);
         return AccessData::create($data);
     }
 
+
     public function find($id)
     {
-        return Report::with(['suspects', 'journeys', 'accessDatas', 'province', 'city', 'district'])
-            ->find($id);
+        return Report::with([
+            'suspects', 
+            'suspects.division',   
+            'journeys', 
+            'accessDatas',
+            'province', 
+            'city', 
+            'district'
+        ])->find($id);
     }
+
+
+    public function updateReport($report, array $data)
+    {
+        return $report->update($data);
+    }
+
 
 }
