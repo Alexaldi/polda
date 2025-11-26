@@ -93,8 +93,7 @@ class InstructionsController extends Controller
             return response()->json(format_error('Anda tidak berwenang mengirim instruksi ke pengguna ini'), 403);
         }
 
-        $instruction = $this->service->storeInstruction($report->id, $fromId, $toId, $message);
-
+        $this->service->storeInstruction($report->id, $fromId, $toId, $message);
         $this->notificationService->send(
             $toId,
             'Petunjuk dan Arahan',
