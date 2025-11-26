@@ -74,6 +74,11 @@ class EventController extends Controller
 
         $data = [];
         foreach ($events as $idx => $event) {
+            $action = '<a href="' . route('events.show', $event) . '" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>';
+            if ($isAdmin) {
+                $action .= ' <a href="' . route('events.edit', $event) . '" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>';
+                $action .= ' <form method="POST" action="' . route('events.destroy', $event) . '" style="display:inline-block;margin-left:4px" onsubmit="return confirm(\'Hapus event ini?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></form>';
+            }
             $data[] = [
                 'DT_RowIndex' => $idx + 1 + $start,
                 'name' => $event->name,
@@ -81,7 +86,7 @@ class EventController extends Controller
                 'start_at' => optional($event->start_at)->format('d-m-Y H:i') ?? '-',
                 'end_at' => optional($event->end_at)->format('d-m-Y H:i') ?? '-',
                 'participants' => $event->participants_count,
-                'action' => '<a href="' . route('events.show', $event) . '" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>',
+                'action' => $action,
             ];
         }
 
