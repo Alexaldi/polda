@@ -28,5 +28,7 @@ Route::prefix('v1')->group(function () {
         Route::get('profile', [ProfileController::class, 'show']);
         Route::get('petunjuk-dan-arahan', [InstructionsController::class, 'index']);
         Route::post('petunjuk-dan-arahan', [InstructionsController::class, 'store']);
+        Route::get('petunjuk-dan-arahan/{report_uuid}', [InstructionsController::class, 'listByReport']);
+        Route::get('petunjuk-dan-arahan/users/{report_uuid}', [InstructionsController::class, 'users']);
     });
 });

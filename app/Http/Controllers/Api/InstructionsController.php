@@ -36,6 +36,42 @@ class InstructionsController extends Controller
         );
     }
 
+    public function listByReport(Request $request, string $report_uuid)
+    {
+        $report = $this->service->getReportByUuid($report_uuid);
+        if (! $report) {
+            return response()->json(format_error('Resource not found'), 404);
+        }
+        $items = $this->service->getInstructionsForReport($report->id)->load(['report', 'fromUser.division']);
+
+        return response()->json(
+            format_success(
+                'Petunjuk dan arahan retrieved successfully',
+                InstructionResource::collection($items)->toArray($request)
+            )
+        );
+    }
+
+    public function users(Request $request, string $report_uuid)
+    {
+        $report = $this->service->getReportByUuid($report_uuid);
+        if (! $report) {
+            return response()->json(format_error('Resource not found'), 404);
+        }
+
+        $users = $this->service->getRelatedUsersForReport($report);
+        $data = $users->map(function ($u) {
+            return [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'division' => [ 'name' => optional($u->division)->name ],
+            ];
+        })->values()->all();
+
+        return response()->json(format_success('Users retrieved successfully', $data));
+    }
+
     public function store(InstructionStoreRequest $request)
     {
         $data = $request->validated();

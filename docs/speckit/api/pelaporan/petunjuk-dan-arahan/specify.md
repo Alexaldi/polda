@@ -5,7 +5,8 @@ Membuat endpoint untuk petunjuk dan arahan
 
 ## Endpoint
 POST /api/v1/petunjuk-dan-arahan
-GET /api/v1/petunjuk-dan-arahan
+GET /api/v1/petunjuk-dan-arahan/{report_uuid}
+GET /api/v1/petunjuk-dan-arahan/users/{report_uuid}
 
 ## Request Body
 ### POST /api/v1/petunjuk-dan-arahan
@@ -18,7 +19,11 @@ Request Body:
 }
 ```
 
-### GET /api/v1/petunjuk-dan-arahan
+### GET /api/v1/petunjuk-dan-arahan/{report_uuid}
+Request Parameters:
+- report_uuid: string (required)
+
+### GET /api/v1/petunjuk-dan-arahan/users/{report_uuid}
 Request Parameters:
 - report_uuid: string (required)
 
@@ -58,11 +63,29 @@ Request Parameters:
   }
   ```
 
+### GET /api/v1/petunjuk-dan-arahan/users/{report_uuid}
+- 200 OK:
+  ```json
+  {
+    "status": "success",
+    "message": "Petunjuk dan arahan retrieved successfully",
+    "data": [
+      {
+        "id": 1,
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+      }
+    ]
+  }
+  ```
+
 ## Model
 - InstructionsAndDirection
+- AccessData
 
 ## Rules
 - Token gunakan JWT
 - Gunakan service repository pattern
 - Relasi data gunakan model
 - Mapping data di model
+- Get Users selain yang ada di table access_datas, juga get users role Admin
