@@ -103,6 +103,25 @@ jQuery(function($) {
 
     $('#btnFilter').on('click', function() { table.draw(); });
     $('#btnClear').on('click', function() { $('#filter_q').val(''); table.draw(); });
+
+    $(document).on('submit', 'form.delete-event-form', function(e) {
+        e.preventDefault();
+        var form = this;
+        if (window.Swal) {
+            Swal.fire({
+                title: 'Hapus event ini?',
+                text: 'Tindakan ini tidak dapat dibatalkan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Hapus',
+                cancelButtonText: 'Batal'
+            }).then(function(result) {
+                if (result.isConfirmed) form.submit();
+            });
+        } else {
+            if (confirm('Hapus event ini?')) form.submit();
+        }
+    });
 });
 </script>
 @endsection

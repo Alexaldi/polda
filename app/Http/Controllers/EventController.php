@@ -37,7 +37,7 @@ class EventController extends Controller
         $user = Auth::user();
         $divisionId = $user?->division_id;
         $isAdmin = $user && method_exists($user, 'hasAnyRole')
-            ? $user->hasAnyRole(['super admin', 'super-admin', 'admin'])
+            ? $user->hasAnyRole([ROLE_ADMIN])
             : false;
 
         if (!$isAdmin && $divisionId) {
@@ -77,7 +77,7 @@ class EventController extends Controller
             $action = '<a href="' . route('events.show', $event) . '" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>';
             if ($isAdmin) {
                 $action .= ' <a href="' . route('events.edit', $event) . '" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>';
-                $action .= ' <form method="POST" action="' . route('events.destroy', $event) . '" style="display:inline-block;margin-left:4px" onsubmit="return confirm(\'Hapus event ini?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></form>';
+                $action .= ' <form method="POST" action="' . route('events.destroy', $event) . '" class="delete-event-form" style="display:inline-block;margin-left:4px">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></form>';
             }
             $data[] = [
                 'DT_RowIndex' => $idx + 1 + $start,
@@ -179,7 +179,7 @@ class EventController extends Controller
         $user = Auth::user();
         $divisionId = $user?->division_id;
         $isAdmin = $user && method_exists($user, 'hasAnyRole')
-            ? $user->hasAnyRole(['super admin','super-admin','admin'])
+            ? $user->hasAnyRole([ROLE_ADMIN])
             : false;
         $isParticipant = $divisionId && $participantDivisionIds->contains($divisionId);
 
@@ -199,7 +199,7 @@ class EventController extends Controller
     {
         $user = Auth::user();
         $isAdmin = $user && method_exists($user, 'hasAnyRole')
-            ? $user->hasAnyRole(['super admin','super-admin','admin'])
+            ? $user->hasAnyRole([ROLE_ADMIN])
             : false;
         if (!$isAdmin) {
             return redirect()->route('events.show', $event)->with('error', 'Hanya admin yang dapat mengedit event.');
@@ -215,7 +215,7 @@ class EventController extends Controller
     {
         $user = Auth::user();
         $isAdmin = $user && method_exists($user, 'hasAnyRole')
-            ? $user->hasAnyRole(['super admin','super-admin','admin'])
+            ? $user->hasAnyRole([ROLE_ADMIN])
             : false;
         if (!$isAdmin) {
             return redirect()->route('events.show', $event)->with('error', 'Hanya admin yang dapat mengedit event.');
@@ -257,7 +257,7 @@ class EventController extends Controller
     {
         $user = Auth::user();
         $isAdmin = $user && method_exists($user, 'hasAnyRole')
-            ? $user->hasAnyRole(['super admin','super-admin','admin'])
+            ? $user->hasAnyRole([ROLE_ADMIN])
             : false;
         if (!$isAdmin) {
             return redirect()->route('events.show', $event)->with('error', 'Hanya admin yang dapat menghapus event.');

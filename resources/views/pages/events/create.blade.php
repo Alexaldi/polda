@@ -173,5 +173,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
+document.addEventListener('DOMContentLoaded', function() {
+  var tbody = document.getElementById('participants-table-body');
+  var hiddenInputs = document.getElementById('participants-hidden-inputs');
+  var existing = {!! isset($event) ? json_encode($event->participants->map(function($p){ return [
+    'division_id' => $p->division_id,
+    'is_required' => (bool) $p->is_required,
+    'note' => $p->note,
+  ]; })) : '[]' !!};
+  var divisionMap = {!! json_encode(collect($divisions)->mapWithKeys(function($d){ return [$d->id => $d->name]; })) !!};
+  if (!tbody || !hiddenInputs) return;
+  existing.forEach(function(p){
+    var index = tbody.children.length;
+    var rowId = 'participant-row-' + index;
+    var divisionName = divisionMap[p.division_id] || '';
+    var row = document.createElement('tr');
+    row.setAttribute('id', rowId);
+    row.innerHTML = '\n      <td>' + divisionName + '</td>\n      <td>' + (p.is_required ? 'Wajib' : 'Opsional') + '</td>\n      <td>' + (p.note || '-') + '</td>\n      <td><button type="button" class="btn btn-danger btn-sm" onclick="removeParticipant(\'' + rowId + '\')">Hapus</button></td>';
+    tbody.appendChild(row);
+    hiddenInputs.innerHTML += '\n      <div id="inputs-' + rowId + '">\n        <input type="hidden" name="participants[' + index + '][division_id]" value="' + p.division_id + '">\n        <input type="hidden" name="participants[' + index + '][is_required]" value="' + (p.is_required ? 1 : 0) + '">\n        <input type="hidden" name="participants[' + index + '][note]" value="' + (p.note || '') + '">\n      </div>';
+  });
+});
 </script>
 @endsection
