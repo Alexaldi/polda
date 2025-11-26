@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\InstructionsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,5 +26,7 @@ Route::prefix('v1')->group(function () {
     Route::group(['middleware' => 'jwt'], function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('profile', [ProfileController::class, 'show']);
+        Route::get('petunjuk-dan-arahan', [InstructionsController::class, 'index']);
+        Route::post('petunjuk-dan-arahan', [InstructionsController::class, 'store']);
     });
 });
