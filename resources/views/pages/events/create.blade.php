@@ -79,7 +79,7 @@
       <div class="modal-body">
         <div class="mb-3">
           <label class="form-label">Unit</label>
-          <select class="form-select" id="part-division">
+          <select class="form-select select2" id="part-division">
             <option value="">Pilih Unit</option>
             @foreach($divisions as $division)
               <option value="{{ $division->id }}">{{ $division->name }}</option>
@@ -175,4 +175,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
-

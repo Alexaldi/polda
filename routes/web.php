@@ -1,21 +1,23 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\RoleController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\InstitutionController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PelaporanController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\SubDivisionController;
-use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\ReportDataController;
 use App\Http\Controllers\ReportJourneyController;
 use App\Http\Controllers\ReportProgressController;
-use App\Http\Controllers\PelaporanController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\ReportDataController;
-use App\Http\Controllers\EventController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SubDivisionController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -124,6 +126,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/notifications/all', [NotificationController::class, 'allNotifications'])->name('notifications.all');
     }
 );
-        Route::resource('events', EventController::class)->parameters(['events' => 'event']);
-        Route::get('datatables/events', [EventController::class, 'datatables'])->name('datatables.events');
-        Route::post('events/{event}/proofs', [EventController::class, 'storeProof'])->name('events.proofs.store');
+Route::resource('events', EventController::class)->parameters(['events' => 'event']);
+Route::get('datatables/events', [EventController::class, 'datatables'])->name('datatables.events');
+Route::post('events/{event}/proofs', [EventController::class, 'storeProof'])->name('events.proofs.store');

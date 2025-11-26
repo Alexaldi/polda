@@ -6,14 +6,23 @@ use App\Models\Division;
 use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\EventUnitProof;
+use App\Models\EventUnitProofFile;
+use App\Models\User;
+use App\Services\NotificationService;
+use Illuminate\Support\Facades\Storage;
+use App\Services\EventService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
-    public function __construct()
+    protected $notifService;
+    protected $eventService;
+    public function __construct(NotificationService $notifService, EventService $eventService)
     {
         $this->middleware('auth');
+        $this->notifService = $notifService;
+        $this->eventService = $eventService;
     }
 
     public function index()
@@ -24,6 +33,18 @@ class EventController extends Controller
     public function datatables(Request $request)
     {
         $query = Event::withCount('participants');
+
+        $user = Auth::user();
+        $divisionId = $user?->division_id;
+        $isAdmin = $user && method_exists($user, 'hasAnyRole')
+            ? $user->hasAnyRole(['super admin', 'super-admin', 'admin'])
+            : false;
+
+        if (!$isAdmin && $divisionId) {
+            $query = $query->whereHas('participants', function ($q) use ($divisionId) {
+                $q->where('division_id', $divisionId);
+            });
+        }
 
         $search = $request->input('search.value', '');
         if (!empty($search)) {
@@ -103,14 +124,9 @@ class EventController extends Controller
             'created_by' => Auth::id(),
         ]);
 
-        foreach ($validated['participants'] ?? [] as $p) {
-            EventParticipant::create([
-                'event_id' => $event->id,
-                'division_id' => $p['division_id'],
-                'is_required' => (bool) ($p['is_required'] ?? true),
-                'note' => $p['note'] ?? null,
-            ]);
-        }
+        $result = $this->eventService->attachParticipantsAndResolveUsers($event, $validated['participants'] ?? []);
+        $userParticipants = $result['user_ids'];
+        $this->notifService->notifyEvent($event, $userParticipants, NOTIF_EVENT_PARTICIPANT);
 
         return redirect()->route('events.show', $event)->with('success', 'Event berhasil dibuat');
     }
@@ -129,24 +145,38 @@ class EventController extends Controller
         $unitProofs = EventUnitProof::where('event_id', $event->id)
             ->with(['uploader','division'])
             ->get();
-        $combinedProofs = collect($event->uniProofs)->concat($unitProofs);
-        $proofGroups = $combinedProofs
+        $fileMap = EventUnitProofFile::whereIn('event_unit_proof_id', $unitProofs->pluck('id'))
+            ->orderBy('id', 'desc')
+            ->get()
+            ->groupBy('event_unit_proof_id');
+        $proofGroups = $unitProofs
             ->groupBy('user_id')
-            ->map(function ($items) {
+            ->map(function ($items) use ($fileMap) {
                 $first = $items->first();
+                $files = [];
+                foreach ($items as $pf) {
+                    foreach (($fileMap[$pf->id] ?? collect()) as $f) {
+                        $files[] = [
+                            'path' => $f->file_path,
+                            'type' => $f->file_type,
+                            'created_at' => optional($f->created_at)->format('d M Y H:i'),
+                        ];
+                    }
+                }
                 return [
                     'user_name' => optional($first->uploader)->name,
                     'division_name' => optional($first->division)->name,
-                    'files' => $items->sortByDesc('created_at')->values()->map(function ($pf) {
-                        return [
-                            'path' => $pf->file_path,
-                            'type' => $pf->file_type,
-                            'created_at' => optional($pf->created_at)->format('d M Y H:i'),
-                            'description' => $pf->description,
-                        ];
-                    })->all(),
+                    'description' => $first->description,
+                    'files' => collect($files)->sortByDesc('created_at')->values()->all(),
                 ];
             })->values();
+
+        $user = Auth::user();
+        $divisionId = $user?->division_id;
+        $isAdmin = $user && method_exists($user, 'hasAnyRole')
+            ? $user->hasAnyRole(['super admin','super-admin','admin'])
+            : false;
+        $isParticipant = $divisionId && $participantDivisionIds->contains($divisionId);
 
         return view('pages.events.show', [
             'event' => $event,
@@ -155,11 +185,20 @@ class EventController extends Controller
             'totalParticipants' => $totalParticipants,
             'uploadedDivisionIds' => $uploadedDivisionIds->toArray(),
             'proofGroups' => $proofGroups,
+            'isAdmin' => $isAdmin,
+            'isParticipant' => $isParticipant,
         ]);
     }
 
     public function edit(Event $event)
     {
+        $user = Auth::user();
+        $isAdmin = $user && method_exists($user, 'hasAnyRole')
+            ? $user->hasAnyRole(['super admin','super-admin','admin'])
+            : false;
+        if (!$isAdmin) {
+            return redirect()->route('events.show', $event)->with('error', 'Hanya admin yang dapat mengedit event.');
+        }
         $event->load('participants');
         return view('pages.events.create', [
             'divisions' => Division::orderBy('name')->get(['id','name']),
@@ -169,6 +208,13 @@ class EventController extends Controller
 
     public function update(Request $request, Event $event)
     {
+        $user = Auth::user();
+        $isAdmin = $user && method_exists($user, 'hasAnyRole')
+            ? $user->hasAnyRole(['super admin','super-admin','admin'])
+            : false;
+        if (!$isAdmin) {
+            return redirect()->route('events.show', $event)->with('error', 'Hanya admin yang dapat mengedit event.');
+        }
         $validated = $request->validate([
             'name' => 'required|string',
             'description' => 'nullable|string',
@@ -204,6 +250,13 @@ class EventController extends Controller
 
     public function destroy(Event $event)
     {
+        $user = Auth::user();
+        $isAdmin = $user && method_exists($user, 'hasAnyRole')
+            ? $user->hasAnyRole(['super admin','super-admin','admin'])
+            : false;
+        if (!$isAdmin) {
+            return redirect()->route('events.show', $event)->with('error', 'Hanya admin yang dapat menghapus event.');
+        }
         $event->delete();
         return redirect()->route('events.index')->with('success', 'Event dihapus');
     }
@@ -226,43 +279,55 @@ class EventController extends Controller
 
         $validated = $request->validate([
             'proof_files' => ['required','array'],
-            'proof_files.*' => ['required','file','max:4096','mimes:jpg,jpeg,png,pdf,doc,docx'],
-            'report_file' => ['nullable','file','max:4096','mimes:jpg,jpeg,png,pdf,doc,docx'],
+            'proof_files.*' => ['required','file','max:2096','mimes:jpg,jpeg,png,pdf,doc,docx'],
+            'report_file' => ['nullable','file','max:2096','mimes:jpg,jpeg,png,pdf,doc,docx'],
             'description' => ['nullable','string'],
         ], [
-            'proof_files.*.max' => 'Maksimal ukuran file 4 MB.',
+            'proof_files.*.max' => 'Maksimal ukuran file 2 MB.',
+            'report_file.max' => 'Maksimal ukuran file 2 MB.',
+        ]);
+
+
+        $existingProofs = EventUnitProof::where('event_id', $event->id)
+            ->where('user_id', $user?->id)
+            ->get();
+        foreach ($existingProofs as $pf) {
+            $files = EventUnitProofFile::where('event_unit_proof_id', $pf->id)->get();
+            foreach ($files as $f) {
+                $rel = ltrim(str_replace('/storage/', '', (string) $f->file_path), '/');
+                if ($rel) {
+                    try { Storage::disk('public')->delete($rel); } catch (\Throwable $e) {}
+                }
+                $f->delete();
+            }
+            $pf->delete();
+        }
+
+        $header = EventUnitProof::create([
+            'event_id' => $event->id,
+            'user_id' => $user?->id,
+            'division_id' => $divisionId,
+            'description' => $validated['description'] ?? null,
         ]);
 
         $files = $request->file('proof_files', []);
         foreach ($files as $file) {
             if (!$file) continue;
             $path = $file->store('events/proofs', 'public');
-            $mime = $file->getClientMimeType();
-            $type = str_contains($mime, 'image') ? 'image' : (str_contains($mime, 'pdf') ? 'pdf' : 'doc');
-
-            \App\Models\EventUnitProof::create([
-                'event_id' => $event->id,
-                'user_id' => $user?->id,
-                'division_id' => $divisionId,
+            EventUnitProofFile::create([
+                'event_unit_proof_id' => $header->id,
                 'file_path' => '/storage/' . $path,
-                'file_type' => $type,
-                'description' => $validated['description'] ?? null,
+                'file_type' => 'file-kegiatan',
             ]);
         }
 
         $reportFile = $request->file('report_file');
         if ($reportFile) {
             $path = $reportFile->store('events/proofs', 'public');
-            $mime = $reportFile->getClientMimeType();
-            $type = str_contains($mime, 'image') ? 'image' : (str_contains($mime, 'pdf') ? 'pdf' : 'doc');
-
-            \App\Models\EventUnitProof::create([
-                'event_id' => $event->id,
-                'user_id' => $user?->id,
-                'division_id' => $divisionId,
+            EventUnitProofFile::create([
+                'event_unit_proof_id' => $header->id,
                 'file_path' => '/storage/' . $path,
-                'file_type' => $type,
-                'description' => $validated['description'] ?? null,
+                'file_type' => 'file-laporan',
             ]);
         }
 

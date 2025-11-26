@@ -25,12 +25,12 @@
                         <span class="nav-text">Unit</span>
                     </a>
                 </li>
+                @endif
                 <li><a href="{{ route('events.index') }}" class="" aria-expanded="false">
                         <i class="material-symbols-outlined">event</i>
                         <span class="nav-text">Kegiatan</span>
                     </a>
                 </li>
-                @endif
 
                 <li><a href="{{ route('pelaporan.index') }}" class="" aria-expanded="false">
                         <i class="material-symbols-outlined">lab_profile</i>

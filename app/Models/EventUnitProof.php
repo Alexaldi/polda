@@ -13,8 +13,6 @@ class EventUnitProof extends Model
         'event_id',
         'user_id',
         'division_id',
-        'file_path',
-        'file_type',
         'description',
     ];
 
