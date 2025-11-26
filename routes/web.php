@@ -114,6 +114,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/reports/{report}/progress', [ReportProgressController::class, 'store'])
             ->name('reports.progress.store');
         Route::get('/dashboard/backlog-tahap', [DashboardController::class, 'backlogPerTahap']);
+        Route::get('/dashboard/events-summary', [DashboardController::class, 'eventSummary'])->name('dashboard.eventsSummary');
+        Route::get('/dashboard/recent-events', [DashboardController::class, 'recentEvents'])->name('dashboard.recentEvents');
         Route::get('/test-auth', function() {
             return dd(auth()->user());
         });

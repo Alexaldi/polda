@@ -15,4 +15,9 @@ class EventUnitProofFile extends Model
         'file_path',
         'file_type',
     ];
+
+    public function eventUnitProof()
+    {
+        return $this->belongsTo(EventUnitProof::class, 'event_unit_proof_id');
+    }
 }
